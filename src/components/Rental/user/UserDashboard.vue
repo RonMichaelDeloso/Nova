@@ -24,11 +24,6 @@
         </button>
       </nav>
 
-      <div class="sidebar-card">
-        <p>Fleet health</p>
-        <strong>96%</strong>
-        <small>All vehicles are checked and ready.</small>
-      </div>
     </aside>
 
     <main class="content-panel">

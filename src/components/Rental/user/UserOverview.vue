@@ -32,14 +32,14 @@
 
           <div class="field-group">
             <label>Preferred brand</label>
-            <select v-model="selectedBrand">
+            <select v-model="preferredBrand">
               <option v-for="brand in brandFilterList" :key="brand" :value="brand">
                 {{ brand }}
               </option>
             </select>
           </div>
 
-          <button class="primary-button wide">Check availability</button>
+          <button class="primary-button wide" @click="checkAvailability">Check availability</button>
         </div>
       </aside>
 
@@ -95,6 +95,11 @@ import { brandFilters, initialCars } from '../shared/rentalData'
 const cars = ref(initialCars)
 const brandFilterList = brandFilters
 const selectedBrand = ref('Any brand')
+const preferredBrand = ref('Any brand')
+
+const checkAvailability = () => {
+  selectedBrand.value = preferredBrand.value
+}
 
 const filteredCars = computed(() => {
   if (selectedBrand.value === 'Any brand') {
