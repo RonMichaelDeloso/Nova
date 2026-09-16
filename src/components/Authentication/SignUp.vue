@@ -4,117 +4,8 @@
     <!-- =========================
          LEFT SIDE - CODE ONLY
     ========================== -->
-    <div class="left-panel">
+    <div class="left-panel" :style="{ backgroundImage: `url(${authWallpaper})` }">
 
-      <!-- TOP BRAND -->
-      <div class="brand">
-        <h2>MOTOR & CAR</h2>
-        <p>RENTAL SYSTEM</p>
-        <div class="brand-icon"></div>
-      </div>
-
-      <!-- HERO TEXT -->
-      <div class="hero-text">
-        <h2>
-          Move freely.<br>
-          We'll <span>take care</span><br>
-          of the ride
-        </h2>
-
-        <div class="yellow-line"></div>
-
-        <p>
-          Rent a car or motor with<br>
-          confidence and enjoy every<br>
-          journey.
-        </p>
-      </div>
-
-      <!-- ROAD LINES -->
-      <div class="road-line line-one"></div>
-      <div class="road-line line-two"></div>
-
-      <!-- MOTORCYCLE -->
-      <div class="motorcycle"></div>
-
-      <!-- CAR -->
-      <div class="car"></div>
-
-      <!-- STEPS -->
-      <div class="steps">
-
-        <div class="step active">
-          <div class="step-icon">⌕</div>
-          <div>
-            <h4>CHOOSE</h4>
-            <p>
-              Pick your perfect<br>
-              ride.
-            </p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-icon">▣</div>
-          <div>
-            <h4>BOOK</h4>
-            <p>
-              Select date and<br>
-              time.
-            </p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-icon">▱</div>
-          <div>
-            <h4>DRIVE</h4>
-            <p>
-              Hit the road and<br>
-              enjoy.
-            </p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-icon">✓</div>
-          <div>
-            <h4>DRIVE</h4>
-            <p>
-              Return it safely,<br>
-              we'll handle the rest.
-            </p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- BOTTOM INFO -->
-      <div class="bottom-info">
-
-        <div class="info-box">
-          <div class="info-icon">♧</div>
-          <div>
-            <strong>Safe & Reliable</strong>
-            <small>
-              All vehicles are ensured<br>
-              and well-maintained.
-            </small>
-          </div>
-        </div>
-
-        <div class="info-box">
-          <div class="info-icon">♧</div>
-          <div>
-            <strong>24/7 Support</strong>
-            <small>
-              We're here for you<br>
-              anytime, anywhere.
-            </small>
-          </div>
-        </div>
-
-      </div>
     </div>
 
 
@@ -126,7 +17,9 @@
       <div class="signup-container">
 
         <!-- LOGO -->
-        <div class="logo-circle"></div>
+        <div class="logo-circle">
+          <img :src="logoImage" alt="MOTOR & CAR Rental System logo" />
+        </div>
 
         <!-- TITLE -->
         <h1>Create Account</h1>
@@ -215,8 +108,6 @@
           </div>
         </div>
 
-
-        <!-- SIGN UP BUTTON -->
         <button
           class="signup-button"
           @click="signUp"
@@ -243,7 +134,12 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { registerUser } from '../../auth'
+import logoImage from '../../assets/logo.png'
+import authWallpaper from '../../assets/authwallpaper.png'
 
+const router = useRouter()
 const fullName = ref('')
 const email = ref('')
 const password = ref('')
@@ -268,10 +164,19 @@ const signUp = () => {
     return
   }
 
-  console.log('Full Name:', fullName.value)
-  console.log('Email:', email.value)
+  const saved = registerUser({
+    fullName: fullName.value,
+    email: email.value,
+    password: password.value,
+  })
+
+  if (!saved) {
+    alert('An account with this email already exists.')
+    return
+  }
 
   alert('Account created successfully!')
+  router.push('/dashboard/user')
 }
 </script>
 
@@ -287,7 +192,7 @@ const signUp = () => {
 ========================= */
 
 .signup-page {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   display: flex;
   overflow: hidden;
@@ -314,6 +219,9 @@ const signUp = () => {
 
   color: white;
   flex-shrink: 0;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 
@@ -579,6 +487,15 @@ const signUp = () => {
   justify-content: center;
 
   font-size: 29px;
+  overflow: hidden;
+}
+
+.logo-circle img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 

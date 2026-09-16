@@ -2,94 +2,7 @@
   <div class="login-page">
 
     <!-- LEFT SIDE -->
-    <div class="left-panel">
-
-      <div class="brand">
-        <h2>MOTOR & CAR</h2>
-        <p>RENTAL SYSTEM</p>
-      </div>
-
-      <div class="yellow-icon">🚗</div>
-
-      <div class="hero-text">
-        <h1>
-          Move freely.<br />
-          We'll <span>take care</span><br />
-          of the ride
-        </h1>
-
-        <div class="yellow-line"></div>
-
-        <p>
-          Rent a car or motor with<br />
-          confidence and enjoy every<br />
-          journey.
-        </p>
-      </div>
-
-      <!-- Vehicle Images -->
-      <div class="vehicles">
-        <div class="motorcycle">🏍️</div>
-        <div class="car">🚗</div>
-      </div>
-
-      <!-- Steps -->
-      <div class="steps">
-
-        <div class="step active">
-          <div class="step-icon">⌕</div>
-          <div>
-            <strong>CHOOSE</strong>
-            <p>Pick your perfect<br />ride.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-icon">▣</div>
-          <div>
-            <strong>BOOK</strong>
-            <p>Select date and<br />time.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-icon">▱</div>
-          <div>
-            <strong>DRIVE</strong>
-            <p>Hit the road and<br />enjoy.</p>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-icon">✓</div>
-          <div>
-            <strong>DRIVE</strong>
-            <p>Return it safely,<br />we'll handle the rest.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Bottom Information -->
-      <div class="bottom-info">
-
-        <div>
-          <span class="info-icon">♧</span>
-          <div>
-            <strong>Safe & Reliable</strong>
-            <p>All vehicles are ensured<br />and well-maintained.</p>
-          </div>
-        </div>
-
-        <div>
-          <span class="info-icon">♧</span>
-          <div>
-            <strong>24/7 Support</strong>
-            <p>We're here for you<br />anytime, anywhere.</p>
-          </div>
-        </div>
-
-      </div>
+    <div class="left-panel" :style="{ backgroundImage: `url(${authWallpaper})` }">
 
     </div>
 
@@ -101,7 +14,7 @@
 
         <!-- Logo -->
         <div class="logo-circle">
-          🚗
+          <img :src="logoImage" alt="MOTOR & CAR Rental System logo" />
         </div>
 
         <h1>Welcome Back!</h1>
@@ -109,7 +22,6 @@
         <p class="subtitle">
           Sign in to continue your account
         </p>
-
 
         <!-- Email -->
         <div class="input-group">
@@ -178,15 +90,38 @@
 
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { getSessionUser, loginUser, seedTemporaryAccount } from '../../auth'
+import logoImage from '../../assets/logo.png'
+import authWallpaper from '../../assets/authwallpaper.png'
 
+const router = useRouter()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
 
+onMounted(() => {
+  seedTemporaryAccount()
+  email.value = 'demo@nova.com'
+  password.value = 'nova123'
+})
+
 const login = () => {
-  console.log('Email:', email.value)
-  console.log('Password:', password.value)
+  if (!email.value || !password.value) {
+    alert('Please enter your email and password.')
+    return
+  }
+
+  const success = loginUser(email.value, password.value)
+
+  if (!success) {
+    alert('Invalid email or password.')
+    return
+  }
+
+  const route = getSessionUser()?.role === 'admin' ? '/dashboard/admin' : '/dashboard/user'
+  router.push(route)
 }
 </script>
 
@@ -198,7 +133,7 @@ const login = () => {
 }
 
 .login-page {
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   display: flex;
   overflow: hidden;
@@ -229,6 +164,9 @@ const login = () => {
 
   color: white;
   padding: 32px 38px;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 
@@ -480,6 +418,15 @@ const login = () => {
   align-items: center;
 
   font-size: 30px;
+  overflow: hidden;
+}
+
+.logo-circle img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 
@@ -495,10 +442,17 @@ const login = () => {
 }
 
 .subtitle {
-  margin: 8px 0 40px;
+  margin: 8px 0 8px;
 
   color: #888;
   font-size: 14px;
+}
+
+.demo-note {
+  margin: 0 0 24px;
+  color: #0f6fff;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 
