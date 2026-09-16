@@ -1,7 +1,7 @@
 <script setup>
-import CarRentalDashboard from './CarRentalDashboard.vue'
+import UserDashboard from './user/UserDashboard.vue'
 </script>
 
 <template>
-  <CarRentalDashboard role="user" />
+  <UserDashboard />
 </template>
