@@ -93,7 +93,7 @@ export const registerUser = (user: StoredUser) => {
   const normalizedUser = {
     ...user,
     role: 'user' as const,
-  }dcd
+  }
 
   const alreadyExists = users.some((existing) => existing.email.toLowerCase() === normalizedUser.email.toLowerCase())
 
