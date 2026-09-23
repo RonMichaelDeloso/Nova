@@ -69,9 +69,12 @@
         </div>
 
 
+        <!-- Error Message -->
+        <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
+
         <!-- Login -->
-        <button class="login-button" @click="login">
-          Log In
+        <button class="login-button" :disabled="isLoading" @click="login">
+          {{ isLoading ? 'Signing In...' : 'Log In' }}
         </button>
 
 
@@ -92,7 +95,8 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getSessionUser, loginUser, seedTemporaryAccount } from '../../auth'
+import { getSessionUser, loginUser } from '../../auth'
+import { checkBackendHealth } from '../../api/client'
 import logoImage from '../../assets/logo.png'
 import authWallpaper from '../../assets/authwallpaper.png'
 
@@ -100,28 +104,43 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const isLoading = ref(false)
+const errorMessage = ref('')
+const isBackendConnected = ref(false)
 
-onMounted(() => {
-  seedTemporaryAccount()
-  email.value = 'demo@nova.com'
-  password.value = 'nova123'
+onMounted(async () => {
+  email.value = 'admin@nova.com'
+  password.value = 'admin123'
+  
+  const health = await checkBackendHealth()
+  isBackendConnected.value = health.ok
 })
 
-const login = () => {
+const login = async () => {
   if (!email.value || !password.value) {
-    alert('Please enter your email and password.')
+    errorMessage.value = 'Please enter your email and password.'
     return
   }
 
-  const success = loginUser(email.value, password.value)
+  errorMessage.value = ''
+  isLoading.value = true
 
-  if (!success) {
-    alert('Invalid email or password.')
-    return
+  try {
+    const result = await loginUser(email.value, password.value)
+
+    if (!result.success) {
+      errorMessage.value = result.message || 'Invalid email or password.'
+      return
+    }
+
+    const role = result.user?.role || getSessionUser()?.role
+    const route = role === 'admin' ? '/dashboard/admin' : '/dashboard/user'
+    router.push(route)
+  } catch (err) {
+    errorMessage.value = err.message || 'Failed to connect to backend server.'
+  } finally {
+    isLoading.value = false
   }
-
-  const route = getSessionUser()?.role === 'admin' ? '/dashboard/admin' : '/dashboard/user'
-  router.push(route)
 }
 </script>
 
@@ -561,6 +580,22 @@ const login = () => {
 
 .login-button:hover {
   background: #002c50;
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-msg {
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  background: #fff0f0;
+  border: 1px solid #ffcdd2;
+  border-radius: 7px;
+  color: #c62828;
+  font-size: 12px;
+  text-align: center;
 }
 
 

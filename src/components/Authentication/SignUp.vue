@@ -108,11 +108,15 @@
           </div>
         </div>
 
+        <!-- Error Message -->
+        <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
+
         <button
           class="signup-button"
+          :disabled="isLoading"
           @click="signUp"
         >
-          Sign Up
+          {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
         </button>
 
 
@@ -147,36 +151,46 @@ const confirmPassword = ref('')
 
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const isLoading = ref(false)
+const errorMessage = ref('')
 
-const signUp = () => {
+const signUp = async () => {
   if (
     !fullName.value ||
     !email.value ||
     !password.value ||
     !confirmPassword.value
   ) {
-    alert('Please fill in all fields.')
+    errorMessage.value = 'Please fill in all fields.'
     return
   }
 
   if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match.')
+    errorMessage.value = 'Passwords do not match.'
     return
   }
 
-  const saved = registerUser({
-    fullName: fullName.value,
-    email: email.value,
-    password: password.value,
-  })
+  errorMessage.value = ''
+  isLoading.value = true
 
-  if (!saved) {
-    alert('An account with this email already exists.')
-    return
+  try {
+    const result = await registerUser({
+      fullName: fullName.value,
+      email: email.value,
+      password: password.value,
+    })
+
+    if (!result.success) {
+      errorMessage.value = result.message || 'An account with this email already exists.'
+      return
+    }
+
+    router.push('/dashboard/user')
+  } catch (err) {
+    errorMessage.value = err.message || 'Failed to connect to backend server.'
+  } finally {
+    isLoading.value = false
   }
-
-  alert('Account created successfully!')
-  router.push('/dashboard/user')
 }
 </script>
 
@@ -625,6 +639,22 @@ const signUp = () => {
 
 .signup-button:hover {
   background: #002c50;
+}
+
+.signup-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-msg {
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  background: #fff0f0;
+  border: 1px solid #ffcdd2;
+  border-radius: 7px;
+  color: #c62828;
+  font-size: 12px;
+  text-align: center;
 }
 
 
