@@ -1,16 +1,8 @@
-import { clearToken, getToken, setToken } from './api/client'
+import { api, clearToken, getToken, setToken } from './api/client'
 
-const USERS_KEY = 'nova-users'
 const SESSION_KEY = 'nova-session'
 
 export type UserRole = 'admin' | 'user'
-
-export type StoredUser = {
-  fullName: string
-  email: string
-  password?: string
-  role?: UserRole
-}
 
 export type SessionUser = {
   id?: number | string
@@ -33,7 +25,8 @@ const normalizeRole = (role?: string): UserRole => {
 export const isAuthenticated = (): boolean => {
   try {
     const session = localStorage.getItem(SESSION_KEY)
-    return Boolean(session)
+    const token = getToken()
+    return Boolean(session || token)
   } catch {
     return false
   }
@@ -65,25 +58,8 @@ export const clearSessionUser = () => {
   }
 }
 
-const getStoredUsers = (): StoredUser[] => {
-  try {
-    const raw = localStorage.getItem(USERS_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-const saveStoredUsers = (users: StoredUser[]) => {
-  try {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users))
-  } catch {
-    // ignore
-  }
-}
-
 /**
- * Register a new user in local storage (No DB required).
+ * Register a new user with the NOVA_BE backend API.
  */
 export const registerUser = async (user: {
   fullName: string
@@ -91,37 +67,29 @@ export const registerUser = async (user: {
   password: string
 }): Promise<AuthResult> => {
   try {
-    const normalizedEmail = user.email.trim().toLowerCase()
-    const users = getStoredUsers()
+    const response = await api<{
+      user: { id: number; fullName?: string; full_name?: string; email: string; role: string }
+      token: string
+      message?: string
+    }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        fullName: user.fullName,
+        email: user.email,
+        password: user.password,
+      }),
+    })
 
-    const existing = users.find((u) => u.email.toLowerCase() === normalizedEmail)
-    if (existing) {
-      return {
-        success: false,
-        message: 'An account with this email already exists.',
-      }
+    if (response.token) {
+      setToken(response.token)
     }
-
-    const role: UserRole = normalizedEmail.includes('admin') ? 'admin' : 'user'
-    const newUser: StoredUser = {
-      fullName: user.fullName,
-      email: normalizedEmail,
-      password: user.password,
-      role,
-    }
-
-    users.push(newUser)
-    saveStoredUsers(users)
-
-    const token = `local-token-${Date.now()}`
-    setToken(token)
 
     const sessionUser: SessionUser = {
-      id: Date.now(),
-      fullName: user.fullName,
-      email: normalizedEmail,
-      role,
-      token,
+      id: response.user?.id || Date.now(),
+      fullName: response.user?.fullName || response.user?.full_name || user.fullName,
+      email: response.user?.email || user.email,
+      role: normalizeRole(response.user?.role),
+      token: response.token,
     }
 
     setSessionUser(sessionUser)
@@ -129,54 +97,35 @@ export const registerUser = async (user: {
   } catch (err: any) {
     return {
       success: false,
-      message: err.message || 'Registration failed. Please try again.',
+      message: err.message || 'Registration failed. Please check your backend connection.',
     }
   }
 }
 
 /**
- * Login user locally (No DB required).
- * Supports default demo accounts (admin@nova.com, user@nova.com) and locally registered users.
+ * Login user via the NOVA_BE backend API.
  */
 export const loginUser = async (email: string, password: string): Promise<AuthResult> => {
   try {
-    const normalizedEmail = email.trim().toLowerCase()
-    const users = getStoredUsers()
+    const response = await api<{
+      user: { id: number; fullName?: string; full_name?: string; email: string; role: string }
+      token: string
+      message?: string
+    }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
 
-    const found = users.find((u) => u.email.toLowerCase() === normalizedEmail)
-
-    let role: UserRole = 'user'
-    let fullName = 'User'
-
-    if (found) {
-      if (found.password && found.password !== password) {
-        return {
-          success: false,
-          message: 'Incorrect password. Please try again.',
-        }
-      }
-      role = found.role || (normalizedEmail.includes('admin') ? 'admin' : 'user')
-      fullName = found.fullName
-    } else {
-      // Demo accounts or instant fallback
-      if (normalizedEmail.includes('admin')) {
-        role = 'admin'
-        fullName = 'Nova Administrator'
-      } else {
-        role = 'user'
-        fullName = normalizedEmail.split('@')[0] || 'Nova User'
-      }
+    if (response.token) {
+      setToken(response.token)
     }
 
-    const token = `local-token-${Date.now()}`
-    setToken(token)
-
     const sessionUser: SessionUser = {
-      id: found ? found.email : Date.now(),
-      fullName,
-      email: normalizedEmail,
-      role,
-      token,
+      id: response.user?.id || Date.now(),
+      fullName: response.user?.fullName || response.user?.full_name || 'User',
+      email: response.user?.email || email,
+      role: normalizeRole(response.user?.role),
+      token: response.token,
     }
 
     setSessionUser(sessionUser)
@@ -184,7 +133,7 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
   } catch (err: any) {
     return {
       success: false,
-      message: err.message || 'Login failed. Please try again.',
+      message: err.message || 'Login failed. Please check your backend connection and credentials.',
     }
   }
 }
@@ -192,4 +141,5 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
 export const logoutUser = () => {
   clearSessionUser()
 }
+
 

@@ -11,7 +11,7 @@
     <section class="main-grid">
       <div class="fleet-section">
         <div class="section-header">
-          <h3>Fleet status</h3>
+          <h3>Fleet status & Recent Activity</h3>
           <button @click="goToFleet">View all</button>
         </div>
 
@@ -24,37 +24,31 @@
             @click="toggleVehicle(vehicle.id)"
           >
             <div class="vehicle-main">
-              <span class="vehicle-badge" :class="vehicle.status === 'Booked' ? 'booked' : 'available'">{{ vehicle.status }}</span>
+              <span class="vehicle-badge" :class="vehicle.status === 'Booked' || vehicle.status === 'rented' ? 'booked' : 'available'">
+                {{ vehicle.status }}
+              </span>
               <div>
-                <strong>{{ vehicle.model }}</strong>
-                <small>{{ vehicle.type }}</small>
+                <strong>{{ vehicle.model || vehicle.name }}</strong>
+                <small>{{ vehicle.type || vehicle.category }}</small>
               </div>
             </div>
             <div class="driver-info">
-              <strong>{{ vehicle.driver }}</strong>
-              <small>{{ vehicle.phone }}</small>
+              <strong>{{ vehicle.driver || vehicle.customer || 'Unassigned' }}</strong>
+              <small>{{ vehicle.plateNumber || vehicle.phone || 'Available' }}</small>
             </div>
             <div class="trip-time">
-              <strong>{{ vehicle.borrowDate }} · {{ vehicle.borrowTime }}</strong>
-              <small>Return by {{ vehicle.returnDate }} · {{ vehicle.returnTime }}</small>
+              <strong>₱{{ vehicle.price || vehicle.pricePerDay }}/day</strong>
+              <small>{{ vehicle.status === 'Available' ? 'Ready for deployment' : 'Active rental' }}</small>
             </div>
 
             <div v-if="expandedVehicleId === vehicle.id" class="vehicle-details">
               <div>
-                <span class="detail-label">Driver name</span>
-                <strong>{{ vehicle.driver }}</strong>
+                <span class="detail-label">Vehicle</span>
+                <strong>{{ vehicle.name || vehicle.model }}</strong>
               </div>
               <div>
-                <span class="detail-label">Contact</span>
-                <strong>{{ vehicle.phone }}</strong>
-              </div>
-              <div>
-                <span class="detail-label">Rental period</span>
-                <strong>{{ vehicle.borrowDate }} {{ vehicle.borrowTime }} - {{ vehicle.returnDate }} {{ vehicle.returnTime }}</strong>
-              </div>
-              <div>
-                <span class="detail-label">Borrow / return location</span>
-                <strong>{{ vehicle.route }}</strong>
+                <span class="detail-label">Rate</span>
+                <strong>₱{{ vehicle.price || vehicle.pricePerDay }}/day</strong>
               </div>
               <div>
                 <span class="detail-label">Status</span>
@@ -69,8 +63,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from '../../../api/client'
 import { adminDashboardStats, initialFleetAssignments } from '../shared/rentalData'
 
 const router = useRouter()
@@ -85,4 +80,30 @@ const toggleVehicle = (vehicleId) => {
 const goToFleet = () => {
   router.push('/dashboard/admin/fleet')
 }
+
+const loadOverview = async () => {
+  try {
+    const statsData = await api('/dashboard/admin').catch(() => null)
+    if (statsData) {
+      dashboardStats.value = [
+        { label: 'Available vehicles', value: statsData.availableCars || statsData.availableVehicles || 0, note: 'Ready to rent' },
+        { label: 'Active bookings', value: statsData.bookings || 0, note: 'Confirmed schedules' },
+        { label: 'Total revenue', value: `₱${(statsData.revenue || 0).toLocaleString()}`, note: 'Completed & confirmed' },
+        { label: 'Maintenance', value: statsData.maintenance || 0, note: 'Under repair / check' }
+      ]
+    }
+
+    const vehicles = await api('/vehicles').catch(() => api('/cars'))
+    if (Array.isArray(vehicles) && vehicles.length > 0) {
+      fleetAssignments.value = vehicles
+    }
+  } catch (err) {
+    console.warn('Using local fallback for overview:', err)
+  }
+}
+
+onMounted(() => {
+  loadOverview()
+})
 </script>
+
