@@ -186,11 +186,11 @@
                 </div>
               </div>
 
-              <small class="form-note">The car must be returned by the selected date and time.</small>
+              <small class="form-note">Choose your actual rental dates and times to check the fleet.</small>
 
               <div class="field-group">
-                <label>Preferred brand</label>
-                <select>
+                <label for="overview-brand">Preferred brand</label>
+                <select id="overview-brand" v-model="availabilityForm.brand">
                   <option>Any brand</option>
                   <option>Mazda</option>
                   <option>Toyota</option>
@@ -279,50 +279,27 @@
 
       <section v-else-if="activeView === 'fleet'" class="view-section">
         <div class="panel-card">
-          <div class="fleet-heading">
-            <div><h2>Fleet overview</h2><p class="panel-description">Manage the vehicles available in your rental system.</p></div>
-            <button class="primary-button" type="button" @click="showAddVehicle = !showAddVehicle">
-              <AppIcon name="plus" size="16" /> {{ showAddVehicle ? 'Cancel' : 'Add vehicle' }}
-            </button>
-          </div>
+          <h2>Fleet overview</h2>
           <div class="data-grid">
             <div v-for="stat in fleetStats" :key="stat.label" class="data-card">
               <span>{{ stat.label }}</span>
-              <strong>{{ stat.value }}</strong>
-              <small>{{ stat.note }}</small>
+              <strong>{{ stat.value || 0 }}</strong>
+              <small>{{ stat.note || 0 }}</small>
             </div>
           </div>
         </div>
 
-        <div v-if="showAddVehicle" class="panel-card">
-          <h3>Add a vehicle</h3>
-          <form class="rental-form fleet-form" @submit.prevent="addVehicle">
-            <div class="form-field"><label for="fleet-name">Vehicle name / model</label><input id="fleet-name" v-model.trim="vehicleForm.name" required placeholder="e.g. Toyota Vios" /></div>
-            <div class="form-field"><label for="fleet-brand">Brand</label><input id="fleet-brand" v-model.trim="vehicleForm.brand" required placeholder="e.g. Toyota" /></div>
-            <div class="form-field"><label for="fleet-type">Vehicle type</label><input id="fleet-type" v-model.trim="vehicleForm.type" required placeholder="e.g. Compact Sedan" /></div>
-            <div class="form-field"><label for="fleet-price">Rental price (₱ per day)</label><input id="fleet-price" v-model.number="vehicleForm.price" type="number" min="1" required placeholder="1500" /></div>
-            <div class="form-field"><label for="fleet-transmission">Transmission</label><select id="fleet-transmission" v-model="vehicleForm.transmission" required><option>Automatic</option><option>Manual</option></select></div>
-            <div class="form-field"><label for="fleet-seats">Seats</label><input id="fleet-seats" v-model.number="vehicleForm.seats" type="number" min="1" max="30" required /></div>
-            <div class="form-field"><label for="fleet-fuel">Fuel type</label><select id="fleet-fuel" v-model="vehicleForm.fuel" required><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
-            <div class="form-field"><label for="fleet-status">Status</label><select id="fleet-status" v-model="vehicleForm.status" required><option>Available</option><option>Maintenance</option><option>Booked</option></select></div>
-            <p v-if="fleetMessage" class="fleet-message">{{ fleetMessage }}</p>
-            <button class="primary-button" type="submit"><AppIcon name="plus" size="16" /> Save vehicle</button>
-          </form>
-        </div>
-
         <div class="panel-card">
-          <h3>Vehicle inventory ({{ cars.length }})</h3>
+          <h3>Vehicle inventory</h3>
           <div class="booking-list">
-            <div v-for="car in cars" :key="car.id" class="booking-row fleet-vehicle-row">
+            <div v-for="car in cars" :key="car.name" class="booking-row">
               <div>
                 <strong>{{ car.name }}</strong>
-                <span>{{ car.brand }} · {{ car.type }} · {{ car.transmission }} · {{ car.seats }} seats · {{ car.fuel }}</span>
+                <span>{{ car.type }}</span>
               </div>
-              <span :class="['status-badge', car.status.toLowerCase()]">{{ car.status }}</span>
+              <span>{{ car.status }}</span>
               <span>₱{{ car.price }}/day</span>
-              <button class="delete-vehicle-button" type="button" @click="deleteVehicle(car.id, car.name)" aria-label="Delete vehicle"> <AppIcon name="trash" size="16" /> Delete</button>
             </div>
-            <p v-if="!cars.length" class="empty-message">No vehicles in the fleet yet. Select “Add vehicle” to create one.</p>
           </div>
         </div>
       </section>
@@ -870,7 +847,6 @@ import { useRouter } from 'vue-router'
 import { clearSessionUser, getSessionUser } from '../../auth'
 import { api, clearToken } from '../../api/client'
 import logoImage from '../../assets/logo.png'
-import AppIcon from '../icons/AppIcon.vue'
 
 const props = defineProps({
   role: {
@@ -1306,11 +1282,11 @@ const dashboardStats = computed(() => {
   ]
 })
 
-const fleetStats = computed(() => [
-  { label: 'Total vehicles', value: cars.value.length, note: 'Vehicles in inventory' },
-  { label: 'Available', value: cars.value.filter((car) => car.status === 'Available').length, note: 'Ready for booking' },
-  { label: 'Maintenance', value: cars.value.filter((car) => car.status === 'Maintenance').length, note: 'Not available for booking' },
-])
+const fleetStats = [
+  { label: 'Active vehicles', value: '36', note: 'Operational today' },
+  { label: 'Idle vehicles', value: '8', note: 'Waiting for pickup' },
+  { label: 'Maintenance', value: '3', note: 'Due this week' },
+]
 
 const selectedThreadId = ref(null)
 const messageDraft = ref('')
@@ -2339,6 +2315,43 @@ const sendMessage = async () => {
   gap: 12px;
 }
 
+.availability-results {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.availability-results h4 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.availability-car-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.availability-car-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.availability-car-icon { font-size: 1.5rem; }
+.availability-car-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.availability-car-info small { color: var(--muted); }
+.availability-car-row > strong { white-space: nowrap; font-size: .88rem; }
+.availability-car-row .secondary-button { grid-column: 1 / -1; width: 100%; }
+
 .form-note {
   display: block;
   margin: -4px 0 16px;
@@ -2535,6 +2548,62 @@ const sendMessage = async () => {
 
 .panel-description { color: var(--muted); margin: 8px 0 22px; max-width: 760px; }
 .rental-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+
+.renter-profile-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+.renter-profile-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(31, 55, 90, 0.06);
+}
+.renter-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.renter-profile-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e8efff;
+  color: #2448a8;
+  font-size: 20px;
+  font-weight: 800;
+}
+.renter-profile-heading { flex: 1; min-width: 0; }
+.renter-profile-heading h3 { margin: 0 0 4px; color: var(--text); font-size: 17px; }
+.renter-profile-heading p { margin: 0; color: var(--muted); font-size: 12px; }
+.renter-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 18px;
+}
+.renter-detail { min-width: 0; padding: 12px; border-radius: 12px; background: #f7f9fd; }
+.renter-detail span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 12px; }
+.renter-detail strong { display: block; overflow-wrap: anywhere; color: var(--text); font-size: 13px; font-weight: 650; }
+.renter-rental-summary { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.renter-rental-summary h4 { margin: 0; color: var(--text); font-size: 14px; }
+@media (max-width: 640px) {
+  .renter-profile-card { padding: 14px; }
+  .renter-profile-header { align-items: flex-start; flex-wrap: wrap; }
+  .renter-profile-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
+
+.renter-info-section { grid-column: 1 / -1; padding: 15px 17px; border: 1px solid var(--line); border-radius: 13px; background: #f7faff; }
+.renter-info-section h3 { margin: 0 0 5px; color: var(--text); font-size: 16px; }
+.renter-info-section p { margin: 0; color: var(--muted); font-size: 13px; }
 .form-field { display: flex; flex-direction: column; gap: 7px; }
 .form-field label { color: #334155; font-size: 13px; font-weight: 700; }
 .form-field input, .form-field select, .location-search input { width: 100%; min-width: 0; border: 1px solid var(--line); background: #fff; border-radius: 11px; padding: 12px 13px; color: var(--text); outline: none; }
@@ -2627,24 +2696,6 @@ const sendMessage = async () => {
   .rental-form > .primary-button { width: 100%; }
 }
 
-.notification-list { display: grid; gap: 12px; margin-top: 20px; }
-.notification-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px; border: 1px solid var(--line, #dfe7f2); border-radius: 14px; background: #fff; }
-.notification-icon, .notification-empty-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 42px; width: 42px; height: 42px; border-radius: 12px; color: #1769d2; background: #eaf3ff; }
-.notification-content { flex: 1; min-width: 0; }
-.notification-content strong { display: block; color: var(--text, #1b2430); }
-.notification-content p { margin: 5px 0; color: var(--muted, #6d7b8d); }
-.notification-content small { color: var(--muted, #6d7b8d); }
-.notification-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 36px 16px; text-align: center; color: var(--muted, #6d7b8d); }
-.notification-empty strong { color: var(--text, #1b2430); }
-.notification-empty p { margin: 0; }
-
-
-.store-location-card { background: #eef6ff; border-radius: 18px; }
-.store-details-list { display: grid; gap: 14px; margin-top: 22px; }
-.store-detail-row { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 14px; background: rgba(255,255,255,.82); }
-.store-detail-icon { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 12px; background: #dcecff; color: #1769d2; }
-.store-detail-row small { display: block; margin-bottom: 3px; color: var(--muted, #6d7b8d); }
-.store-detail-row strong { color: var(--text, #1b2430); }
 
 .messages-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
 .message-count { white-space: nowrap; border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; color: var(--muted); font-size: 12px; font-weight: 700; }
@@ -3442,17 +3493,3 @@ const sendMessage = async () => {
 }
 
 </style>
-
-.fleet-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
-.fleet-heading h2 { margin-bottom: 6px; }
-.fleet-form { margin-top: 16px; }
-.fleet-form .fleet-message { grid-column: 1 / -1; margin: 0; color: var(--accent); font-size: 13px; font-weight: 700; }
-.fleet-form > .primary-button { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 8px; }
-.fleet-vehicle-row { grid-template-columns: minmax(0, 2fr) auto auto auto; align-items: center; }
-.delete-vehicle-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #fecaca; background: #fff1f2; color: #b91c1c; padding: 9px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-.delete-vehicle-button:hover { background: #ffe4e6; }
-.status-badge.maintenance { background: #fff7ed; color: #c2410c; }
-.status-badge.booked { background: #eff6ff; color: #1d4ed8; }
-.status-badge.available { background: #ecfdf5; color: #047857; }
-@media (max-width: 768px) { .fleet-heading { flex-direction: column; } .fleet-vehicle-row { grid-template-columns: 1fr; align-items: start; } .fleet-form > .primary-button { width: 100%; } }
-
