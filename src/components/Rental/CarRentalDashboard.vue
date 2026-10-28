@@ -19,7 +19,7 @@
           :class="{ active: activeView === item.key }"
           @click="activeView = item.key"
         >
-          <span>{{ item.icon }}</span>
+          <span class="nav-icon"><AppIcon :name="item.icon" size="19" /></span>
           {{ item.label }}
         </button>
       </nav>
@@ -39,10 +39,10 @@
 
         <div class="topbar-actions">
           <div class="search-box">
-            <span>⌕</span>
+            <AppIcon name="search" size="18" />
             <input type="text" placeholder="Search vehicle" />
           </div>
-          <button v-if="!isAdmin" class="primary-button" @click="activeView = 'bookings'">✨ New booking</button>
+          <button v-if="!isAdmin" class="primary-button" @click="activeView = 'bookings'"><AppIcon name="sparkles" size="16" /> New booking</button>
           <div class="user-pill">
             <div class="avatar">{{ userInitials }}</div>
             <div class="user-meta">
@@ -66,7 +66,7 @@
         <section class="main-grid">
           <div v-if="isAdmin" class="fleet-section">
             <div class="section-header">
-              <h3>🚘 Fleet status</h3>
+              <h3><AppIcon name="car" size="19" /> Fleet status</h3>
               <button>View all</button>
             </div>
 
@@ -122,36 +122,36 @@
 
           <aside v-if="!isAdmin" class="booking-panel">
             <div class="booking-card">
-              <p class="eyebrow">✨ Quick booking</p>
-              <h3>🚗 Reserve your ride</h3>
+              <p class="eyebrow"><AppIcon name="sparkles" size="16" /> Quick booking</p>
+              <h3><AppIcon name="car" size="22" /> Reserve your ride</h3>
 
               <div class="date-row">
                 <div class="field-group">
-                  <label for="overview-pickup-date">Borrow date</label>
-                  <input id="overview-pickup-date" v-model="availabilityForm.pickupDate" type="date" :min="today" required />
+                  <label>Borrow date</label>
+                  <input type="date" value="2026-09-18" />
                 </div>
                 <div class="field-group">
-                  <label for="overview-pickup-time">Borrow time</label>
-                  <input id="overview-pickup-time" v-model="availabilityForm.pickupTime" type="time" required />
+                  <label>Borrow time</label>
+                  <input type="time" value="09:30" />
                 </div>
               </div>
 
               <div class="date-row">
                 <div class="field-group">
-                  <label for="overview-return-date">Return date</label>
-                  <input id="overview-return-date" v-model="availabilityForm.dropoffDate" type="date" :min="availabilityForm.pickupDate || today" required />
+                  <label>Return date</label>
+                  <input type="date" value="2026-09-22" />
                 </div>
                 <div class="field-group">
-                  <label for="overview-return-time">Return time</label>
-                  <input id="overview-return-time" v-model="availabilityForm.dropoffTime" type="time" required />
+                  <label>Return time</label>
+                  <input type="time" value="18:00" />
                 </div>
               </div>
 
-              <small class="form-note">Choose your actual rental dates and times to check the fleet.</small>
+              <small class="form-note">The car must be returned by the selected date and time.</small>
 
               <div class="field-group">
-                <label for="overview-brand">Preferred brand</label>
-                <select id="overview-brand" v-model="availabilityForm.brand">
+                <label>Preferred brand</label>
+                <select>
                   <option>Any brand</option>
                   <option>Mazda</option>
                   <option>Toyota</option>
@@ -161,21 +161,7 @@
                 </select>
               </div>
 
-              <button class="primary-button wide" type="button" @click="checkAvailability">🔎 Check availability</button>
-              <p v-if="availabilityError" class="form-error" role="alert">{{ availabilityError }}</p>
-              <div v-if="availabilityChecked" class="availability-results" aria-live="polite">
-                <h4>{{ availableVehicles.length }} vehicle{{ availableVehicles.length === 1 ? '' : 's' }} available</h4>
-                <p class="form-note">For {{ availabilityForm.pickupDate }} {{ availabilityForm.pickupTime }} to {{ availabilityForm.dropoffDate }} {{ availabilityForm.dropoffTime }}</p>
-                <div v-if="availableVehicles.length" class="availability-car-list">
-                  <div v-for="car in availableVehicles" :key="car.name" class="availability-car-row">
-                    <span class="availability-car-icon">{{ car.icon }}</span>
-                    <div class="availability-car-info"><strong>{{ car.name }}</strong><small>{{ car.brand }} · {{ car.type }} · {{ car.seats }} seats</small></div>
-                    <strong>₱{{ car.price }}/day</strong>
-                    <button type="button" class="secondary-button" @click="continueWithVehicle(car)">Choose</button>
-                  </div>
-                </div>
-                <p v-else class="empty-message">No matching vehicles are available for those dates. Try another date or brand.</p>
-              </div>
+              <button class="primary-button wide">Check availability</button>
             </div>
 
           </aside>
@@ -183,8 +169,8 @@
           <section v-if="!isAdmin" class="car-browser">
             <div class="brand-filter">
               <div>
-                <p class="eyebrow">🚙 Browse by brand</p>
-                <h3>✨ Choose your preferred brand</h3>
+                <p class="eyebrow"><AppIcon name="car" size="16" /> Browse by brand</p>
+                <h3><AppIcon name="sparkles" size="18" /> Choose your preferred brand</h3>
               </div>
               <div class="brand-filter-options">
                 <button
@@ -209,7 +195,7 @@
                 </div>
                 <span :class="['status-badge', car.status === 'Available' ? 'confirmed' : 'pending']">{{ car.status }}</span>
               </div>
-              <div class="car-illustration">{{ car.icon }}</div>
+              <div class="car-illustration"><AppIcon name="car" size="38" /></div>
               <div class="car-card-footer">
                 <strong>₱{{ car.price }}<small>/day</small></strong>
                 <div class="car-specs">
@@ -226,210 +212,135 @@
 
       <section v-else-if="activeView === 'fleet'" class="view-section">
         <div class="panel-card">
-          <h2>Fleet overview</h2>
+          <div class="fleet-heading">
+            <div><h2>Fleet overview</h2><p class="panel-description">Manage the vehicles available in your rental system.</p></div>
+            <button class="primary-button" type="button" @click="showAddVehicle = !showAddVehicle">
+              <AppIcon name="plus" size="16" /> {{ showAddVehicle ? 'Cancel' : 'Add vehicle' }}
+            </button>
+          </div>
           <div class="data-grid">
             <div v-for="stat in fleetStats" :key="stat.label" class="data-card">
               <span>{{ stat.label }}</span>
-              <strong>{{ stat.value || 0 }}</strong>
-              <small>{{ stat.note || 0 }}</small>
+              <strong>{{ stat.value }}</strong>
+              <small>{{ stat.note }}</small>
             </div>
           </div>
         </div>
 
+        <div v-if="showAddVehicle" class="panel-card">
+          <h3>Add a vehicle</h3>
+          <form class="rental-form fleet-form" @submit.prevent="addVehicle">
+            <div class="form-field"><label for="fleet-name">Vehicle name / model</label><input id="fleet-name" v-model.trim="vehicleForm.name" required placeholder="e.g. Toyota Vios" /></div>
+            <div class="form-field"><label for="fleet-brand">Brand</label><input id="fleet-brand" v-model.trim="vehicleForm.brand" required placeholder="e.g. Toyota" /></div>
+            <div class="form-field"><label for="fleet-type">Vehicle type</label><input id="fleet-type" v-model.trim="vehicleForm.type" required placeholder="e.g. Compact Sedan" /></div>
+            <div class="form-field"><label for="fleet-price">Rental price (₱ per day)</label><input id="fleet-price" v-model.number="vehicleForm.price" type="number" min="1" required placeholder="1500" /></div>
+            <div class="form-field"><label for="fleet-transmission">Transmission</label><select id="fleet-transmission" v-model="vehicleForm.transmission" required><option>Automatic</option><option>Manual</option></select></div>
+            <div class="form-field"><label for="fleet-seats">Seats</label><input id="fleet-seats" v-model.number="vehicleForm.seats" type="number" min="1" max="30" required /></div>
+            <div class="form-field"><label for="fleet-fuel">Fuel type</label><select id="fleet-fuel" v-model="vehicleForm.fuel" required><option>Petrol</option><option>Diesel</option><option>Hybrid</option><option>Electric</option></select></div>
+            <div class="form-field"><label for="fleet-status">Status</label><select id="fleet-status" v-model="vehicleForm.status" required><option>Available</option><option>Maintenance</option><option>Booked</option></select></div>
+            <p v-if="fleetMessage" class="fleet-message">{{ fleetMessage }}</p>
+            <button class="primary-button" type="submit"><AppIcon name="plus" size="16" /> Save vehicle</button>
+          </form>
+        </div>
+
         <div class="panel-card">
-          <h3>Vehicle inventory</h3>
+          <h3>Vehicle inventory ({{ cars.length }})</h3>
           <div class="booking-list">
-            <div v-for="car in cars" :key="car.name" class="booking-row">
+            <div v-for="car in cars" :key="car.id" class="booking-row fleet-vehicle-row">
               <div>
                 <strong>{{ car.name }}</strong>
-                <span>{{ car.type }}</span>
+                <span>{{ car.brand }} · {{ car.type }} · {{ car.transmission }} · {{ car.seats }} seats · {{ car.fuel }}</span>
               </div>
-              <span>{{ car.status }}</span>
+              <span :class="['status-badge', car.status.toLowerCase()]">{{ car.status }}</span>
               <span>₱{{ car.price }}/day</span>
+              <button class="delete-vehicle-button" type="button" @click="deleteVehicle(car.id, car.name)" aria-label="Delete vehicle"> <AppIcon name="trash" size="16" /> Delete</button>
             </div>
+            <p v-if="!cars.length" class="empty-message">No vehicles in the fleet yet. Select “Add vehicle” to create one.</p>
           </div>
         </div>
       </section>
 
       <section v-else-if="activeView === 'bookings'" class="view-section">
         <div class="panel-card booking-form-card" v-if="!isAdmin">
-          <p class="eyebrow">🗓️ Plan your trip</p><h2>🚘 Create a rental booking</h2>
-          <p class="panel-description">Enter your renter details first, then choose your vehicle and rental schedule.</p>
+          <p class="eyebrow"><AppIcon name="calendar" size="16" /> Plan your trip</p><h2><AppIcon name="car" size="22" /> Create a rental booking</h2>
+          <p class="panel-description">Choose your pickup and drop-off locations, dates, and times.</p>
           <form class="rental-form" @submit.prevent="createBooking">
-            <div class="renter-info-section">
-              <h3>👤 Renter Information</h3>
-              <p>These details help the rental team contact you and verify your booking.</p>
-            </div>
-            <div class="form-field"><label for="renter-full-name">Full name</label><input id="renter-full-name" v-model.trim="bookingForm.renterName" autocomplete="name" required placeholder="Enter your full legal name" /></div>
-            <div class="form-field"><label for="renter-phone">Contact number</label><input id="renter-phone" v-model.trim="bookingForm.phone" type="tel" autocomplete="tel" required placeholder="e.g. 09XX XXX XXXX" /></div>
-            <div class="form-field"><label for="renter-email">Email address</label><input id="renter-email" v-model.trim="bookingForm.email" type="email" autocomplete="email" required placeholder="you@example.com" /></div>
-            <div class="form-field"><label for="renter-address">Home address</label><input id="renter-address" v-model.trim="bookingForm.address" autocomplete="street-address" required placeholder="House number, street, city" /></div>
-            <div class="form-field"><label for="renter-license">Driver's license number</label><input id="renter-license" v-model.trim="bookingForm.licenseNumber" required placeholder="Enter your driver's license number" /></div>
-            <div class="form-field"><label for="renter-license-expiry">License expiry date</label><input id="renter-license-expiry" v-model="bookingForm.licenseExpiry" type="date" required /></div>
-            <div class="renter-info-section">
-              <h3>🚘 Rental Details</h3>
-              <p>Choose your pickup and drop-off locations, dates, times, and preferred vehicle.</p>
-            </div>
-            <div class="form-field">
-              <label for="pickup-location">📍 Pickup location</label>
-              <select id="pickup-location" v-model="bookingForm.pickup" required>
-                <option value="" disabled>Choose a pickup location</option>
-                <option v-for="place in nearbyPlaces" :key="`pickup-${place.name}`" :value="place.query">{{ place.name }}</option>
-                <option value="Other">Other location (enter manually)</option>
-              </select>
-              <input v-if="bookingForm.pickup === 'Other'" id="pickup-custom-location" v-model.trim="bookingForm.pickupCustom" required placeholder="Type your pickup address" />
-            </div>
-            <div class="form-field">
-              <label for="dropoff-location">🏁 Drop-off location</label>
-              <select id="dropoff-location" v-model="bookingForm.dropoff" required>
-                <option value="" disabled>Choose a drop-off location</option>
-                <option v-for="place in nearbyPlaces" :key="`dropoff-${place.name}`" :value="place.query">{{ place.name }}</option>
-                <option value="Other">Other location (enter manually)</option>
-              </select>
-              <input v-if="bookingForm.dropoff === 'Other'" id="dropoff-custom-location" v-model.trim="bookingForm.dropoffCustom" required placeholder="Type your drop-off address" />
-            </div>
-            <div class="form-field"><label for="pickup-date">📅 Pickup date</label><input id="pickup-date" v-model="bookingForm.pickupDate" type="date" required /></div>
-            <div class="form-field"><label for="pickup-time">⏰ Pickup time</label><input id="pickup-time" v-model="bookingForm.pickupTime" type="time" required /></div>
-            <div class="form-field"><label for="dropoff-date">📅 Drop-off date</label><input id="dropoff-date" v-model="bookingForm.dropoffDate" type="date" required /></div>
-            <div class="form-field"><label for="dropoff-time">⏰ Drop-off time</label><input id="dropoff-time" v-model="bookingForm.dropoffTime" type="time" required /></div>
-            <div class="form-field"><label for="rental-brand">🚗 Preferred vehicle</label><select id="rental-brand" v-model="bookingForm.brand"><option>Any brand</option><option>Mazda</option><option>Toyota</option><option>Suzuki</option><option>Honda</option><option>Nissan</option></select></div>
-            <div class="form-field"><label for="rental-notes">📝 Trip notes (optional)</label><input id="rental-notes" v-model.trim="bookingForm.notes" placeholder="Extra details for your booking" /></div>
-            <p v-if="bookingError" class="form-error">{{ bookingError }}</p><button type="submit" class="primary-button">✅ Submit booking request</button>
+            <div class="form-field"><label for="pickup-location"><AppIcon name="pin" size="15" /> Pickup location</label><input id="pickup-location" v-model.trim="bookingForm.pickup" required placeholder="e.g. Centrio Mall, Cagayan de Oro" /></div>
+            <div class="form-field"><label for="dropoff-location"><AppIcon name="route" size="15" /> Drop-off location</label><input id="dropoff-location" v-model.trim="bookingForm.dropoff" required placeholder="Enter your return location" /></div>
+            <div class="form-field"><label for="pickup-date"><AppIcon name="calendar" size="15" /> Pickup date</label><input id="pickup-date" v-model="bookingForm.pickupDate" type="date" required /></div>
+            <div class="form-field"><label for="pickup-time"><AppIcon name="clock" size="15" /> Pickup time</label><input id="pickup-time" v-model="bookingForm.pickupTime" type="time" required /></div>
+            <div class="form-field"><label for="dropoff-date"><AppIcon name="calendar" size="15" /> Drop-off date</label><input id="dropoff-date" v-model="bookingForm.dropoffDate" type="date" required /></div>
+            <div class="form-field"><label for="dropoff-time"><AppIcon name="clock" size="15" /> Drop-off time</label><input id="dropoff-time" v-model="bookingForm.dropoffTime" type="time" required /></div>
+            <div class="form-field"><label for="rental-brand"><AppIcon name="car" size="15" /> Preferred vehicle</label><select id="rental-brand" v-model="bookingForm.brand"><option>Any brand</option><option>Mazda</option><option>Toyota</option><option>Suzuki</option><option>Honda</option><option>Nissan</option></select></div>
+            <div class="form-field"><label for="rental-notes"><AppIcon name="note" size="15" /> Trip notes (optional)</label><input id="rental-notes" v-model.trim="bookingForm.notes" placeholder="Extra details for your booking" /></div>
+            <p v-if="bookingError" class="form-error">{{ bookingError }}</p><button type="submit" class="primary-button"><AppIcon name="check" size="16" /> Submit booking request</button>
           </form>
         </div>
-        <div class="panel-card"><h2>📅 {{ isAdmin ? 'Booking requests' : 'Your bookings' }}</h2>
+        <div class="panel-card"><h2><AppIcon name="calendar" size="19" /> {{ isAdmin ? 'Booking requests' : 'Your bookings' }}</h2>
           <div class="booking-list">
             <div v-for="booking in bookings" :key="booking.id" class="booking-row">
-              <div>
-                <strong>{{ booking.customer }} · {{ booking.brand }}</strong>
-                <span>📍 {{ booking.pickup }} → 🏁 {{ booking.dropoff }}</span>
-                <span>{{ booking.notes || 'No extra notes' }}</span>
-              </div>
+              <div><strong>{{ booking.customer }} · {{ booking.brand }}</strong><span><AppIcon name="pin" size="14" /> {{ booking.pickup }} → <AppIcon name="route" size="14" /> {{ booking.dropoff }}</span><span>{{ booking.notes || 'No extra notes' }}</span></div>
               <span>Pickup {{ booking.pickupDate }} {{ booking.pickupTime }} · Drop-off {{ booking.dropoffDate }} {{ booking.dropoffTime }}</span>
               <span :class="['status-badge', booking.status.toLowerCase()]">{{ booking.status }}</span>
-            </div><p v-if="!bookings.length" class="empty-message">🚗 No bookings yet. Create your first rental request above.</p>
-          </div>
-        </div>
-      </section>
-      <section v-else-if="activeView === 'renter-information'" class="view-section">
-        <div class="panel-card">
-          <p class="eyebrow">👤 Customer details</p>
-          <h2>Renter Information</h2>
-          <p class="panel-description">Personal and contact details are shown here separately from your rental booking schedule.</p>
-          <div class="renter-profile-list">
-            <article v-for="renter in renterInformation" :key="renter.id" class="renter-profile-card">
-              <div class="renter-profile-header">
-                <div class="renter-profile-avatar">{{ (renter.renterName || 'R').trim().charAt(0).toUpperCase() }}</div>
-                <div class="renter-profile-heading">
-                  <h3>{{ renter.renterName }}</h3>
-                  <p>Renter ID: RNT-{{ String(renter.id).slice(-6) }}</p>
-                </div>
-                <span class="status-badge pending">Booking #{{ renter.bookingId }}</span>
-              </div>
-              <div class="renter-profile-grid">
-                <div class="renter-detail"><span>📞 Contact Number</span><strong>{{ renter.phone || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>✉️ Email Address</span><strong>{{ renter.email || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>🏠 Home Address</span><strong>{{ renter.address || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>🪪 Driver's License</span><strong>{{ renter.licenseNumber || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>📅 License Expiry</span><strong>{{ renter.licenseExpiry || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>🚗 Preferred Vehicle</span><strong>{{ renter.brand || 'Any brand' }}</strong></div>
-              </div>
-              <div class="renter-rental-summary">
-                <h4>Rental Details</h4>
-                <div class="renter-profile-grid">
-                  <div class="renter-detail"><span>📍 Pickup Location</span><strong>{{ renter.pickup || 'Not provided' }}</strong></div>
-                  <div class="renter-detail"><span>🏁 Drop-off Location</span><strong>{{ renter.dropoff || 'Not provided' }}</strong></div>
-                  <div class="renter-detail"><span>🗓️ Pickup Schedule</span><strong>{{ renter.pickupDate }} · {{ renter.pickupTime }}</strong></div>
-                  <div class="renter-detail"><span>🗓️ Return Schedule</span><strong>{{ renter.dropoffDate }} · {{ renter.dropoffTime }}</strong></div>
-                </div>
-              </div>
-            </article>
-            <p v-if="!renterInformation.length" class="empty-message">👤 No renter profiles yet. Complete a booking and each renter's information will appear here as a separate profile card.</p>
+            </div><p v-if="!bookings.length" class="empty-message">No bookings yet. Create your first rental request above.</p>
           </div>
         </div>
       </section>
       <section v-else-if="activeView === 'nearby'" class="view-section">
-        <div class="panel-card"><p class="eyebrow">🧭 Explore around you</p><h2>📍 Nearby places & map</h2>
-          <p class="panel-description">Search for an address or place to view it on OpenStreetMap. Allow location access to use your current location.</p>
-          <div class="location-search"><input v-model.trim="mapSearch" aria-label="Search map location" placeholder="Search a place or address..." @keyup.enter="openMapSearch" /><button class="primary-button" @click="openMapSearch">🔎 Search map</button><button class="secondary-button" @click="useCurrentLocation">📡 Use my location</button></div>
-          <p v-if="locationMessage" class="location-message">{{ locationMessage }}</p>
-          <div class="map-frame"><iframe title="OpenStreetMap location map" :src="mapEmbedUrl" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
-          <a class="map-link" :href="mapSearchUrl" target="_blank" rel="noopener noreferrer">🗺️ Open full map in OpenStreetMap ↗</a>
-        </div>
-        <div class="panel-card"><h2>✨ Popular places to explore</h2><p class="panel-description">Example destinations. Select one to view its map; verify the address and travel details before leaving.</p>
-          <div class="places-grid"><button v-for="place in nearbyPlaces" :key="place.name" class="place-card" @click="selectNearbyPlace(place)"><span class="place-emoji">{{ place.icon }}</span><strong>{{ place.name }}</strong><span>{{ place.description }}</span><small>📍 View on map ↗</small></button></div>
+        <div class="panel-card store-location-card">
+          <p class="eyebrow"><AppIcon name="store" size="16" /> Our Rental Store Location</p>
+          <h2>Our Rental Store Location</h2>
+          <p class="panel-description">Visit our store or contact us for assistance with your next rental.</p>
+          <div class="store-details-list">
+            <div class="store-detail-row"><span class="store-detail-icon"><AppIcon name="store" size="20" /></span><div><small>Store Name</small><strong>NovaRent Rental Hub</strong></div></div>
+            <div class="store-detail-row"><span class="store-detail-icon"><AppIcon name="pin" size="20" /></span><div><small>Address</small><strong>123 Rizal St., Cagayan de Oro City, Misamis Oriental, 9000</strong></div></div>
+            <div class="store-detail-row"><span class="store-detail-icon"><AppIcon name="phone" size="20" /></span><div><small>Contact Number</small><strong>(088) 123 4567</strong></div></div>
+            <div class="store-detail-row"><span class="store-detail-icon"><AppIcon name="clock" size="20" /></span><div><small>Operating Hours</small><strong>Monday–Sunday, 8:00 AM–8:00 PM</strong></div></div>
+          </div>
         </div>
       </section>
 
-      <section v-else-if="activeView === 'messages'" class="view-section">
-        <div class="panel-card messages-panel">
-          <div class="messages-heading">
-            <div>
-              <p class="eyebrow">💬 Stay connected</p>
-              <h2>{{ isAdmin ? 'Customer Messages' : 'Messages & Support' }}</h2>
-              <p class="panel-description">{{ isAdmin ? 'Open a conversation to read it and reply to the renter.' : 'Send a question about your booking or ask the rental team for help.' }}</p>
-            </div>
-            <span class="message-count">{{ messageThreads.length }} conversation{{ messageThreads.length === 1 ? '' : 's' }}</span>
-          </div>
-
-          <div class="messaging-layout">
-            <aside class="conversation-sidebar">
-              <div class="conversation-sidebar-heading"><strong>Conversations</strong></div>
-              <button v-for="thread in messageThreads" :key="thread.id" class="conversation-card" :class="{ selected: selectedThreadId === thread.id }" @click="selectedThreadId = thread.id">
-                <span class="conversation-avatar">{{ (isAdmin ? thread.senderName : 'Rental Support').slice(0, 1).toUpperCase() }}</span>
-                <span class="conversation-summary">
-                  <strong>{{ isAdmin ? thread.senderName : 'Rental Support' }}</strong>
-                  <span class="conversation-subject">{{ thread.subject }}</span>
-                  <small>{{ thread.messages[thread.messages.length - 1]?.text || 'No messages yet' }}</small>
-                </span>
-                <span v-if="thread.messages.some(m => m.senderRole !== (isAdmin ? 'admin' : 'user')) && !thread.readBy?.includes(isAdmin ? 'admin' : 'user')" class="unread-dot" aria-label="Unread message"></span>
-              </button>
-              <p v-if="!messageThreads.length" class="empty-message conversation-empty">No conversations yet. Send your first message below.</p>
-            </aside>
-
-            <div class="conversation-main">
-              <template v-if="activeThread">
-                <div class="thread-header">
-                  <div class="conversation-avatar large">{{ (isAdmin ? activeThread.senderName : 'Rental Support').slice(0, 1).toUpperCase() }}</div>
-                  <div><strong>{{ isAdmin ? activeThread.senderName : 'Rental Support Team' }}</strong><span>{{ activeThread.subject }}</span></div>
-                </div>
-                <div class="thread-messages" aria-live="polite">
-                  <div v-for="(item, index) in activeThread.messages" :key="item.id || index" class="chat-bubble-wrap" :class="{ mine: item.senderRole === (isAdmin ? 'admin' : 'user') }">
-                    <span class="chat-sender">{{ item.senderName }}</span>
-                    <div class="chat-bubble">{{ item.text }}</div>
-                    <small>{{ item.time }}</small>
-                  </div>
-                </div>
-                <form class="message-compose" @submit.prevent="sendMessage">
-                  <label class="sr-only" for="reply-message">Write a message</label>
-                  <textarea id="reply-message" v-model.trim="messageDraft" rows="2" maxlength="2000" placeholder="Write your message..." required></textarea>
-                  <button class="primary-button" type="submit" :disabled="!messageDraft.trim()">Send message ➤</button>
-                </form>
-              </template>
-              <template v-else>
-                <div class="new-message-placeholder">
-                  <template v-if="isAdmin">
-                    <span class="placeholder-icon">📭</span>
-                    <h3>No customer conversations yet</h3>
-                    <p>When a renter sends a message, their conversation will appear on the left. Open it to reply.</p>
-                  </template>
-                  <template v-else>
-                    <span class="placeholder-icon">✉️</span>
-                    <h3>Start a conversation</h3>
-                    <p>Send a message to the rental team. Include your booking reference if you already made a reservation.</p>
-                    <form class="new-message-form" @submit.prevent="startConversation">
-                      <label for="message-subject">Subject</label>
-                      <input id="message-subject" v-model.trim="messageSubject" maxlength="100" placeholder="e.g. Question about my booking" required />
-                      <label for="first-message">Message</label>
-                      <textarea id="first-message" v-model.trim="messageDraft" rows="4" maxlength="2000" placeholder="How can we help you?" required></textarea>
-                      <button class="primary-button" type="submit" :disabled="!messageSubject.trim() || !messageDraft.trim()">Send to rental support ➤</button>
-                    </form>
-                  </template>
-                </div>
-              </template>
+      <section v-else-if="activeView === 'history'" class="view-section">
+        <div class="panel-card">
+          <p class="eyebrow"><AppIcon name="history" size="16" /> Your rental activity</p>
+          <h2><AppIcon name="history" size="20" /> Rental History</h2>
+          <p class="panel-description">Review your rental booking requests and their current status.</p>
+          <div v-if="bookings.length" class="booking-list">
+            <div v-for="booking in bookings" :key="booking.id" class="booking-row">
+              <div><strong>{{ booking.brand }} · {{ booking.customer }}</strong><span><AppIcon name="pin" size="14" /> {{ booking.pickup }} → {{ booking.dropoff }}</span><span>{{ booking.notes || 'No extra notes' }}</span></div>
+              <span>Pickup {{ booking.pickupDate }} {{ booking.pickupTime }} · Drop-off {{ booking.dropoffDate }} {{ booking.dropoffTime }}</span>
+              <span :class="['status-badge', booking.status.toLowerCase()]">{{ booking.status }}</span>
             </div>
           </div>
-          <p class="messaging-note">Messages are saved in this browser for this demo. To deliver messages between different users or devices, connect this feature to the Django backend.</p>
+          <div v-else class="notification-empty">
+            <span class="notification-empty-icon"><AppIcon name="history" size="28" /></span>
+            <strong>No rental history yet</strong>
+            <p>Your booking requests will appear here after you create a rental booking.</p>
+          </div>
+        </div>
+      </section>
+
+      <section v-else-if="activeView === 'notifications'" class="view-section">
+        <div class="panel-card">
+          <p class="eyebrow"><AppIcon name="bell" size="16" /> Updates and alerts</p>
+          <h2><AppIcon name="bell" size="20" /> Notifications</h2>
+          <p class="panel-description">Stay updated about your rental requests and booking activity.</p>
+          <div v-if="notifications.length" class="notification-list">
+            <article v-for="notification in notifications" :key="notification.id" class="notification-item">
+              <span class="notification-icon"><AppIcon :name="notification.icon" size="20" /></span>
+              <div class="notification-content">
+                <strong>{{ notification.title }}</strong>
+                <p>{{ notification.description }}</p>
+                <small>{{ notification.time }}</small>
+              </div>
+              <span :class="['status-badge', notification.status.toLowerCase()]">{{ notification.status }}</span>
+            </article>
+          </div>
+          <div v-else class="notification-empty">
+            <span class="notification-empty-icon"><AppIcon name="bell" size="28" /></span>
+            <strong>You're all caught up!</strong>
+            <p>New booking updates and rental alerts will appear here.</p>
+          </div>
         </div>
       </section>
 
@@ -439,10 +350,11 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { clearSessionUser, getSessionUser } from '../../auth'
 import logoImage from '../../assets/logo.png'
+import AppIcon from '../icons/AppIcon.vue'
 
 const props = defineProps({
   role: {
@@ -458,12 +370,12 @@ const expandedVehicleId = ref(null)
 const isAdmin = computed(() => props.role === 'admin' || sessionUser?.role === 'admin')
 
 const navItems = computed(() => [
-  { key: 'dashboard', label: 'Overview', icon: '🏠' },
-  ...(isAdmin.value ? [{ key: 'fleet', label: 'Fleet', icon: '🚗' }] : []),
-  { key: 'bookings', label: 'Bookings', icon: '📅' },
-  ...(!isAdmin.value ? [{ key: 'renter-information', label: 'Renter Information', icon: '👤' }] : []),
-  ...(!isAdmin.value ? [{ key: 'nearby', label: 'Nearby places', icon: '📍' }] : []),
-  { key: 'messages', label: 'Messages', icon: '💬' },
+  { key: 'dashboard', label: 'Overview', icon: 'home' },
+  ...(isAdmin.value ? [{ key: 'fleet', label: 'Fleet', icon: 'car' }] : []),
+  { key: 'bookings', label: 'Bookings', icon: 'calendar' },
+  ...(!isAdmin.value ? [{ key: 'nearby', label: 'Rental Store Location', icon: 'store' }] : []),
+  ...(!isAdmin.value ? [{ key: 'history', label: 'History', icon: 'history' }] : []),
+  { key: 'notifications', label: 'Notifications', icon: 'bell' },
 ])
 
 const pageTitle = computed(() => {
@@ -471,9 +383,9 @@ const pageTitle = computed(() => {
     dashboard: 'Overview',
     fleet: 'Fleet',
     bookings: 'Bookings',
-    'renter-information': 'Renter Information',
-    messages: 'Messages',
-    nearby: 'Nearby places',
+    history: 'History',
+    notifications: 'Notifications',
+    nearby: 'Rental Store Location',
   }
   return titles[activeView.value] || 'Overview'
 })
@@ -498,84 +410,33 @@ const logout = () => {
 }
 
 const today = new Date().toISOString().slice(0, 10)
-const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
-const availabilityForm = ref({ pickupDate: today, pickupTime: '09:00', dropoffDate: tomorrow, dropoffTime: '18:00', brand: 'Any brand' })
-const availabilityChecked = ref(false)
-const availabilityError = ref('')
-const bookingForm = ref({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickup: '', dropoff: '', pickupCustom: '', dropoffCustom: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
+const bookingForm = ref({ pickup: '', dropoff: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
 const bookingError = ref('')
 const bookings = ref([])
-const renterInformation = ref([])
+const showAddVehicle = ref(false)
+const fleetMessage = ref('')
+const vehicleForm = ref({ name: '', brand: '', type: '', price: 1500, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available' })
 const mapSearch = ref('Cagayan de Oro, Philippines')
 const mapQuery = ref('Cagayan de Oro, Philippines')
 const locationMessage = ref('')
 const mapEmbedUrl = computed(() => `https://www.google.com/maps?q=${encodeURIComponent(mapQuery.value)}&output=embed`)
 const mapSearchUrl = computed(() => `https://www.openstreetmap.org/search?query=${encodeURIComponent(mapQuery.value)}`)
 const nearbyPlaces = [
-  { name: 'Centrio Mall', icon: '🛍️', description: 'Shopping and dining', query: 'Centrio Mall, Cagayan de Oro, Philippines' },
-  { name: 'Limketkai Center', icon: '🏬', description: 'Shopping and entertainment', query: 'Limketkai Center, Cagayan de Oro, Philippines' },
-  { name: 'Gaston Park', icon: '🌳', description: 'City park and open space', query: 'Gaston Park, Cagayan de Oro, Philippines' },
-  { name: 'Museo de Oro', icon: '🏛️', description: 'Local history and culture', query: 'Museo de Oro, Cagayan de Oro, Philippines' },
-  { name: 'Macabalan Port', icon: '⛴️', description: 'Port and ferry area', query: 'Macabalan Port, Cagayan de Oro, Philippines' },
-  { name: 'SM CDO Downtown Premier', icon: '🛒', description: 'Shopping and restaurants', query: 'SM CDO Downtown Premier, Cagayan de Oro, Philippines' },
+  { name: 'Centrio Mall', icon: 'shopping', description: 'Shopping and dining', query: 'Centrio Mall, Cagayan de Oro, Philippines' },
+  { name: 'Limketkai Center', icon: 'building', description: 'Shopping and entertainment', query: 'Limketkai Center, Cagayan de Oro, Philippines' },
+  { name: 'Gaston Park', icon: 'tree', description: 'City park and open space', query: 'Gaston Park, Cagayan de Oro, Philippines' },
+  { name: 'Museo de Oro', icon: 'landmark', description: 'Local history and culture', query: 'Museo de Oro, Cagayan de Oro, Philippines' },
+  { name: 'Macabalan Port', icon: 'ship', description: 'Port and ferry area', query: 'Macabalan Port, Cagayan de Oro, Philippines' },
+  { name: 'SM CDO Downtown Premier', icon: 'shopping', description: 'Shopping and restaurants', query: 'SM CDO Downtown Premier, Cagayan de Oro, Philippines' },
 ]
-const bookingFormDefaults = () => ({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickup: '', dropoff: '', pickupCustom: '', dropoffCustom: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
 const createBooking = () => {
   bookingError.value = ''
-  const pickup = bookingForm.value.pickup === 'Other' ? bookingForm.value.pickupCustom.trim() : bookingForm.value.pickup
-  const dropoff = bookingForm.value.dropoff === 'Other' ? bookingForm.value.dropoffCustom.trim() : bookingForm.value.dropoff
-
-  if (!pickup || !dropoff) {
-    bookingError.value = 'Please choose or enter both pickup and drop-off locations.'
-    return
-  }
-  if (bookingForm.value.licenseExpiry && bookingForm.value.licenseExpiry < today) {
-    bookingError.value = 'Your driver’s license must not be expired.'
-    return
-  }
   if (bookingForm.value.dropoffDate < bookingForm.value.pickupDate || (bookingForm.value.dropoffDate === bookingForm.value.pickupDate && bookingForm.value.dropoffTime <= bookingForm.value.pickupTime)) {
     bookingError.value = 'Drop-off must be after the pickup date and time.'
     return
   }
-  const bookingId = Date.now()
-  const renterRecord = {
-    id: bookingId,
-    bookingId,
-    renterName: bookingForm.value.renterName,
-    phone: bookingForm.value.phone,
-    email: bookingForm.value.email,
-    address: bookingForm.value.address,
-    licenseNumber: bookingForm.value.licenseNumber,
-    licenseExpiry: bookingForm.value.licenseExpiry,
-    brand: bookingForm.value.brand,
-    pickup,
-    dropoff,
-    pickupDate: bookingForm.value.pickupDate,
-    pickupTime: bookingForm.value.pickupTime,
-    dropoffDate: bookingForm.value.dropoffDate,
-    dropoffTime: bookingForm.value.dropoffTime,
-  }
-  renterInformation.value.unshift(renterRecord)
-  bookings.value.unshift({
-    id: bookingId,
-    customer: bookingForm.value.renterName,
-    renterName: bookingForm.value.renterName,
-    phone: bookingForm.value.phone,
-    email: bookingForm.value.email,
-    address: bookingForm.value.address,
-    licenseNumber: bookingForm.value.licenseNumber,
-    licenseExpiry: bookingForm.value.licenseExpiry,
-    pickup, dropoff,
-    pickupDate: bookingForm.value.pickupDate,
-    pickupTime: bookingForm.value.pickupTime,
-    dropoffDate: bookingForm.value.dropoffDate,
-    dropoffTime: bookingForm.value.dropoffTime,
-    brand: bookingForm.value.brand,
-    notes: bookingForm.value.notes,
-    status: 'Pending'
-  })
-  bookingForm.value = bookingFormDefaults()
-  activeView.value = 'renter-information'
+  bookings.value.unshift({ id: Date.now(), customer: userName.value, pickup: bookingForm.value.pickup, dropoff: bookingForm.value.dropoff, pickupDate: bookingForm.value.pickupDate, pickupTime: bookingForm.value.pickupTime, dropoffDate: bookingForm.value.dropoffDate, dropoffTime: bookingForm.value.dropoffTime, brand: bookingForm.value.brand, notes: bookingForm.value.notes, status: 'Pending' })
+  bookingForm.value = { pickup: '', dropoff: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' }
 }
 const openMapSearch = () => {
   if (!mapSearch.value) return
@@ -594,70 +455,46 @@ const useCurrentLocation = () => {
     const { latitude, longitude } = position.coords
     mapQuery.value = `${latitude},${longitude}`
     mapSearch.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
-    locationMessage.value = '📍 Current coordinates loaded. Open the full map for nearby results.'
+    locationMessage.value = 'Current coordinates loaded. Open the full map for nearby results.'
   }, () => { locationMessage.value = 'Location access was not available. You can search for a place manually.' }, { enableHighAccuracy: true, timeout: 10000 })
 }
 
-const cars = [
-  { name: 'Mazda 3', brand: 'Mazda', type: 'Compact Sedan', price: 85, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '🚘', tint: 'blue' },
-  { name: 'Toyota Camry', brand: 'Toyota', type: 'Comfort Sedan', price: 95, transmission: 'Automatic', seats: 5, fuel: 'Hybrid', status: 'Available', icon: '🚙', tint: 'navy' },
-  { name: 'Suzuki Ertiga', brand: 'Suzuki', type: 'Family MPV', price: 80, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '🚙', tint: 'slate' },
-  { name: 'Honda Civic', brand: 'Honda', type: 'Sport Sedan', price: 105, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '🚗', tint: 'sky' },
-  { name: 'Nissan X-Trail', brand: 'Nissan', type: 'Luxury SUV', price: 125, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '🚘', tint: 'blue' },
-]
+const cars = ref([
+  { id: 1, name: 'Mazda 3', brand: 'Mazda', type: 'Compact Sedan', price: 85, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: 'car', tint: 'blue' },
+  { id: 2, name: 'Toyota Camry', brand: 'Toyota', type: 'Comfort Sedan', price: 95, transmission: 'Automatic', seats: 5, fuel: 'Hybrid', status: 'Available', icon: 'car', tint: 'navy' },
+  { id: 3, name: 'Suzuki Ertiga', brand: 'Suzuki', type: 'Family MPV', price: 80, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: 'car', tint: 'slate' },
+  { id: 4, name: 'Honda Civic', brand: 'Honda', type: 'Sport Sedan', price: 105, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: 'car', tint: 'sky' },
+  { id: 5, name: 'Nissan X-Trail', brand: 'Nissan', type: 'Luxury SUV', price: 125, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: 'car', tint: 'blue' },
+])
+let nextVehicleId = 6
+
+const addVehicle = () => {
+  fleetMessage.value = ''
+  const name = vehicleForm.value.name.trim()
+  if (!name || !vehicleForm.value.brand.trim() || !vehicleForm.value.type.trim() || Number(vehicleForm.value.price) <= 0) {
+    fleetMessage.value = 'Please complete the vehicle details and enter a valid daily price.'
+    return
+  }
+  if (cars.value.some((car) => car.name.toLowerCase() === name.toLowerCase())) {
+    fleetMessage.value = 'A vehicle with this name already exists in the fleet.'
+    return
+  }
+  cars.value.push({ id: nextVehicleId++, ...vehicleForm.value, name, brand: vehicleForm.value.brand.trim(), type: vehicleForm.value.type.trim(), icon: 'car', tint: 'blue' })
+  vehicleForm.value = { name: '', brand: '', type: '', price: 1500, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available' }
+  fleetMessage.value = 'Vehicle added successfully.'
+  showAddVehicle.value = false
+}
+
+const deleteVehicle = (id, name) => {
+  if (!window.confirm(`Are you sure you want to delete ${name} from the fleet?`)) return
+  cars.value = cars.value.filter((car) => car.id !== id)
+}
 
 const selectedBrand = ref('Any brand')
 const brandFilters = ['Any brand', 'Mazda', 'Toyota', 'Suzuki', 'Honda', 'Nissan']
 const filteredCars = computed(() => selectedBrand.value === 'Any brand'
-  ? cars
-  : cars.filter((car) => car.brand === selectedBrand.value))
-
-const availableVehicles = computed(() => {
-  if (!availabilityChecked.value || availabilityError.value) return []
-  const requestedStart = `${availabilityForm.value.pickupDate}T${availabilityForm.value.pickupTime}`
-  const requestedEnd = `${availabilityForm.value.dropoffDate}T${availabilityForm.value.dropoffTime}`
-  const brandMatches = availabilityForm.value.brand === 'Any brand'
-    ? cars
-    : cars.filter((car) => car.brand === availabilityForm.value.brand)
-  return brandMatches.filter((car) => {
-    if (car.status !== 'Available') return false
-    return !bookings.value.some((booking) => {
-      if (booking.status === 'Cancelled' || booking.status === 'Rejected') return false
-      if (booking.brand !== 'Any brand' && booking.brand !== car.brand) return false
-      const existingStart = `${booking.pickupDate}T${booking.pickupTime}`
-      const existingEnd = `${booking.dropoffDate}T${booking.dropoffTime}`
-      return requestedStart < existingEnd && requestedEnd > existingStart
-    })
-  })
-})
-
-const checkAvailability = () => {
-  availabilityError.value = ''
-  availabilityChecked.value = false
-  const { pickupDate, pickupTime, dropoffDate, dropoffTime } = availabilityForm.value
-  if (!pickupDate || !pickupTime || !dropoffDate || !dropoffTime) {
-    availabilityError.value = 'Please select both rental dates and times.'
-    return
-  }
-  if (pickupDate < today) {
-    availabilityError.value = 'The borrow date cannot be in the past.'
-    return
-  }
-  if (dropoffDate < pickupDate || (dropoffDate === pickupDate && dropoffTime <= pickupTime)) {
-    availabilityError.value = 'Return date and time must be after the borrow date and time.'
-    return
-  }
-  availabilityChecked.value = true
-}
-
-const continueWithVehicle = (car) => {
-  bookingForm.value.brand = car.brand
-  bookingForm.value.pickupDate = availabilityForm.value.pickupDate
-  bookingForm.value.pickupTime = availabilityForm.value.pickupTime
-  bookingForm.value.dropoffDate = availabilityForm.value.dropoffDate
-  bookingForm.value.dropoffTime = availabilityForm.value.dropoffTime
-  activeView.value = 'bookings'
-}
+  ? cars.value
+  : cars.value.filter((car) => car.brand === selectedBrand.value))
 
 const trips = [
   { name: 'Jenna Cooper', borrowDate: 'Sep 18', borrowTime: '09:30', returnDate: 'Sep 22' },
@@ -690,63 +527,20 @@ const dashboardStats = computed(() => {
   ]
 })
 
-const fleetStats = [
-  { label: 'Active vehicles', value: '36', note: 'Operational today' },
-  { label: 'Idle vehicles', value: '8', note: 'Waiting for pickup' },
-  { label: 'Maintenance', value: '3', note: 'Due this week' },
-]
+const fleetStats = computed(() => [
+  { label: 'Total vehicles', value: cars.value.length, note: 'Vehicles in inventory' },
+  { label: 'Available', value: cars.value.filter((car) => car.status === 'Available').length, note: 'Ready for booking' },
+  { label: 'Maintenance', value: cars.value.filter((car) => car.status === 'Maintenance').length, note: 'Not available for booking' },
+])
 
-const messageStorageKey = 'motor-car-rental-message-threads'
-const loadMessageThreads = () => {
-  try {
-    const saved = localStorage.getItem(messageStorageKey)
-    return saved ? JSON.parse(saved) : []
-  } catch {
-    return []
-  }
-}
-const messageThreads = ref(loadMessageThreads())
-const selectedThreadId = ref(messageThreads.value[0]?.id ?? null)
-const messageDraft = ref('')
-const messageSubject = ref('')
-const activeThread = computed(() => messageThreads.value.find(thread => thread.id === selectedThreadId.value) || null)
-const formatMessageTime = () => new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
-const persistMessageThreads = () => {
-  try { localStorage.setItem(messageStorageKey, JSON.stringify(messageThreads.value)) } catch (error) { console.warn('Could not save messages in this browser.', error) }
-}
-watch(messageThreads, persistMessageThreads, { deep: true })
-const startConversation = () => {
-  const text = messageDraft.value.trim()
-  const subject = messageSubject.value.trim()
-  if (!text || !subject) return
-  const id = `MSG-${Date.now()}`
-  const thread = {
-    id,
-    subject,
-    senderName: isAdmin.value ? 'Rental Support' : userName.value,
-    senderRole: isAdmin.value ? 'admin' : 'user',
-    readBy: [isAdmin.value ? 'admin' : 'user'],
-    messages: [{ id: `${id}-1`, senderName: userName.value, senderRole: isAdmin.value ? 'admin' : 'user', text, time: formatMessageTime() }],
-  }
-  messageThreads.value.unshift(thread)
-  selectedThreadId.value = id
-  messageSubject.value = ''
-  messageDraft.value = ''
-}
-const sendMessage = () => {
-  const text = messageDraft.value.trim()
-  if (!text || !activeThread.value) return
-  activeThread.value.messages.push({
-    id: `${activeThread.value.id}-${Date.now()}`,
-    senderName: userName.value,
-    senderRole: isAdmin.value ? 'admin' : 'user',
-    text,
-    time: formatMessageTime(),
-  })
-  if (!activeThread.value.readBy) activeThread.value.readBy = []
-  if (!activeThread.value.readBy.includes(isAdmin.value ? 'admin' : 'user')) activeThread.value.readBy.push(isAdmin.value ? 'admin' : 'user')
-  messageDraft.value = ''
-}
+const notifications = computed(() => bookings.value.map((booking) => ({
+  id: `booking-${booking.id}`,
+  icon: booking.status?.toLowerCase() === 'confirmed' ? 'check' : 'calendar',
+  title: `Rental request ${booking.status || 'updated'}`,
+  description: `${booking.brand || 'Vehicle'} · ${booking.pickup || 'Pickup location'} to ${booking.dropoff || 'Drop-off location'}`,
+  time: `Pickup: ${booking.pickupDate || 'Not set'} at ${booking.pickupTime || 'Not set'}`,
+  status: booking.status || 'Pending',
+})).reverse())
 
 </script>
 
@@ -1541,43 +1335,6 @@ const sendMessage = () => {
   gap: 12px;
 }
 
-.availability-results {
-  margin-top: 16px;
-  padding: 14px;
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.availability-results h4 {
-  margin: 0 0 6px;
-  color: var(--text);
-  font-size: 1rem;
-}
-
-.availability-car-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.availability-car-row {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  background: #fff;
-}
-
-.availability-car-icon { font-size: 1.5rem; }
-.availability-car-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.availability-car-info small { color: var(--muted); }
-.availability-car-row > strong { white-space: nowrap; font-size: .88rem; }
-.availability-car-row .secondary-button { grid-column: 1 / -1; width: 100%; }
-
 .form-note {
   display: block;
   margin: -4px 0 16px;
@@ -1755,62 +1512,6 @@ const sendMessage = () => {
 
 .panel-description { color: var(--muted); margin: 8px 0 22px; max-width: 760px; }
 .rental-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-
-.renter-profile-list {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
-}
-.renter-profile-card {
-  min-width: 0;
-  padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(31, 55, 90, 0.06);
-}
-.renter-profile-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--line);
-}
-.renter-profile-avatar {
-  display: grid;
-  place-items: center;
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #e8efff;
-  color: #2448a8;
-  font-size: 20px;
-  font-weight: 800;
-}
-.renter-profile-heading { flex: 1; min-width: 0; }
-.renter-profile-heading h3 { margin: 0 0 4px; color: var(--text); font-size: 17px; }
-.renter-profile-heading p { margin: 0; color: var(--muted); font-size: 12px; }
-.renter-profile-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  padding-top: 18px;
-}
-.renter-detail { min-width: 0; padding: 12px; border-radius: 12px; background: #f7f9fd; }
-.renter-detail span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 12px; }
-.renter-detail strong { display: block; overflow-wrap: anywhere; color: var(--text); font-size: 13px; font-weight: 650; }
-.renter-rental-summary { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
-.renter-rental-summary h4 { margin: 0; color: var(--text); font-size: 14px; }
-@media (max-width: 640px) {
-  .renter-profile-card { padding: 14px; }
-  .renter-profile-header { align-items: flex-start; flex-wrap: wrap; }
-  .renter-profile-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-}
-
-.renter-info-section { grid-column: 1 / -1; padding: 15px 17px; border: 1px solid var(--line); border-radius: 13px; background: #f7faff; }
-.renter-info-section h3 { margin: 0 0 5px; color: var(--text); font-size: 16px; }
-.renter-info-section p { margin: 0; color: var(--muted); font-size: 13px; }
 .form-field { display: flex; flex-direction: column; gap: 7px; }
 .form-field label { color: #334155; font-size: 13px; font-weight: 700; }
 .form-field input, .form-field select, .location-search input { width: 100%; min-width: 0; border: 1px solid var(--line); background: #fff; border-radius: 11px; padding: 12px 13px; color: var(--text); outline: none; }
@@ -1903,44 +1604,37 @@ const sendMessage = () => {
   .rental-form > .primary-button { width: 100%; }
 }
 
+.notification-list { display: grid; gap: 12px; margin-top: 20px; }
+.notification-item { display: flex; align-items: flex-start; gap: 14px; padding: 16px; border: 1px solid var(--line, #dfe7f2); border-radius: 14px; background: #fff; }
+.notification-icon, .notification-empty-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 42px; width: 42px; height: 42px; border-radius: 12px; color: #1769d2; background: #eaf3ff; }
+.notification-content { flex: 1; min-width: 0; }
+.notification-content strong { display: block; color: var(--text, #1b2430); }
+.notification-content p { margin: 5px 0; color: var(--muted, #6d7b8d); }
+.notification-content small { color: var(--muted, #6d7b8d); }
+.notification-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 36px 16px; text-align: center; color: var(--muted, #6d7b8d); }
+.notification-empty strong { color: var(--text, #1b2430); }
+.notification-empty p { margin: 0; }
 
-.messages-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
-.message-count { white-space: nowrap; border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; color: var(--muted); font-size: 12px; font-weight: 700; }
-.messaging-layout { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.7fr); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; min-height: 420px; }
-.conversation-sidebar { background: #f8faff; border-right: 1px solid var(--line); padding: 12px; }
-.conversation-sidebar-heading { padding: 7px 8px 12px; color: var(--text); }
-.conversation-card { width: 100%; display: flex; align-items: flex-start; gap: 10px; text-align: left; padding: 12px 9px; border: 1px solid transparent; border-radius: 12px; background: transparent; cursor: pointer; color: var(--text); }
-.conversation-card:hover, .conversation-card.selected { background: #fff; border-color: var(--line); }
-.conversation-avatar { width: 36px; height: 36px; flex: 0 0 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: var(--brand-soft); color: var(--brand-dark); font-weight: 800; }
-.conversation-avatar.large { width: 42px; height: 42px; flex-basis: 42px; }
-.conversation-summary { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.conversation-summary strong { font-size: 13px; }
-.conversation-subject { font-size: 12px; font-weight: 700; color: var(--text); }
-.conversation-summary small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--muted); }
-.unread-dot { width: 8px; height: 8px; flex: 0 0 8px; margin-top: 5px; border-radius: 50%; background: var(--brand); }
-.conversation-empty { padding: 18px 6px; font-size: 13px; }
-.conversation-main { min-width: 0; display: flex; flex-direction: column; background: #fff; }
-.thread-header { display: flex; align-items: center; gap: 11px; padding: 15px 18px; border-bottom: 1px solid var(--line); }
-.thread-header div:last-child { display: flex; flex-direction: column; gap: 4px; }
-.thread-header span { color: var(--muted); font-size: 12px; }
-.thread-messages { flex: 1; max-height: 340px; min-height: 230px; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
-.chat-bubble-wrap { display: flex; flex-direction: column; align-items: flex-start; max-width: 85%; gap: 4px; }
-.chat-bubble-wrap.mine { align-self: flex-end; align-items: flex-end; }
-.chat-sender, .chat-bubble-wrap small { font-size: 11px; color: var(--muted); }
-.chat-bubble { padding: 10px 13px; border-radius: 14px 14px 14px 4px; background: #f1f5fb; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
-.chat-bubble-wrap.mine .chat-bubble { background: var(--brand); color: white; border-radius: 14px 14px 4px 14px; }
-.message-compose { display: flex; align-items: flex-end; gap: 10px; padding: 14px; border-top: 1px solid var(--line); }
-.message-compose textarea, .new-message-form textarea, .new-message-form input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; font: inherit; color: var(--text); background: white; resize: vertical; }
-.message-compose textarea { flex: 1; min-width: 0; }
-.message-compose .primary-button { white-space: nowrap; }
-.new-message-placeholder { max-width: 520px; width: 100%; margin: auto; padding: 28px; }
-.placeholder-icon { font-size: 32px; }
-.new-message-placeholder h3 { margin: 12px 0 8px; }
-.new-message-placeholder p { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.new-message-form { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
-.new-message-form label { font-size: 12px; font-weight: 700; margin-top: 6px; }
-.new-message-form .primary-button { margin-top: 8px; }
-.messaging-note { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-@media (max-width: 760px) { .messaging-layout { grid-template-columns: 1fr; } .conversation-sidebar { border-right: 0; border-bottom: 1px solid var(--line); max-height: 230px; overflow-y: auto; } .message-compose { flex-direction: column; align-items: stretch; } .messages-heading { flex-direction: column; } .new-message-placeholder { padding: 20px; } }
+
+.store-location-card { background: #eef6ff; border-radius: 18px; }
+.store-details-list { display: grid; gap: 14px; margin-top: 22px; }
+.store-detail-row { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 14px; background: rgba(255,255,255,.82); }
+.store-detail-icon { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 12px; background: #dcecff; color: #1769d2; }
+.store-detail-row small { display: block; margin-bottom: 3px; color: var(--muted, #6d7b8d); }
+.store-detail-row strong { color: var(--text, #1b2430); }
+
 </style>
+
+.fleet-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.fleet-heading h2 { margin-bottom: 6px; }
+.fleet-form { margin-top: 16px; }
+.fleet-form .fleet-message { grid-column: 1 / -1; margin: 0; color: var(--accent); font-size: 13px; font-weight: 700; }
+.fleet-form > .primary-button { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 8px; }
+.fleet-vehicle-row { grid-template-columns: minmax(0, 2fr) auto auto auto; align-items: center; }
+.delete-vehicle-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #fecaca; background: #fff1f2; color: #b91c1c; padding: 9px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+.delete-vehicle-button:hover { background: #ffe4e6; }
+.status-badge.maintenance { background: #fff7ed; color: #c2410c; }
+.status-badge.booked { background: #eff6ff; color: #1d4ed8; }
+.status-badge.available { background: #ecfdf5; color: #047857; }
+@media (max-width: 768px) { .fleet-heading { flex-direction: column; } .fleet-vehicle-row { grid-template-columns: 1fr; align-items: start; } .fleet-form > .primary-button { width: 100%; } }
+
