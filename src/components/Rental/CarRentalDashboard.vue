@@ -19,8 +19,38 @@
           :class="{ active: activeView === item.key }"
           @click="activeView = item.key"
         >
-          <span>{{ item.icon }}</span>
-          {{ item.label }}
+          <span class="nav-icon-wrap">
+            <svg v-if="item.key === 'dashboard'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <svg v-else-if="item.key === 'fleet'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+            <svg v-else-if="item.key === 'bookings'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <svg v-else-if="item.key === 'renter-information'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <svg v-else-if="item.key === 'nearby'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <svg v-else-if="item.key === 'messages'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </span>
+          <span class="nav-text-label">{{ item.label }}</span>
         </button>
       </nav>
 
@@ -39,10 +69,19 @@
 
         <div class="topbar-actions">
           <div class="search-box">
-            <span>⌕</span>
+            <svg class="search-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
             <input type="text" placeholder="Search vehicle" />
           </div>
-          <button v-if="!isAdmin" class="primary-button" @click="activeView = 'bookings'">✨ New booking</button>
+          <button v-if="!isAdmin" class="primary-button new-booking-btn" @click="openBookingModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>New Booking</span>
+          </button>
           <div class="user-pill">
             <div class="avatar">{{ userInitials }}</div>
             <div class="user-meta">
@@ -66,7 +105,7 @@
         <section class="main-grid">
           <div v-if="isAdmin" class="fleet-section">
             <div class="section-header">
-              <h3>🚘 Fleet status</h3>
+              <h3>Fleet Status</h3>
               <button>View all</button>
             </div>
 
@@ -122,28 +161,30 @@
 
           <aside v-if="!isAdmin" class="booking-panel">
             <div class="booking-card">
-              <p class="eyebrow">✨ Quick booking</p>
-              <h3>🚗 Reserve your ride</h3>
+              <p class="eyebrow">Quick Booking</p>
+              <h3>Reserve Your Ride</h3>
 
-              <div class="date-row">
-                <div class="field-group">
-                  <label for="overview-pickup-date">Borrow date</label>
-                  <input id="overview-pickup-date" v-model="availabilityForm.pickupDate" type="date" :min="today" required />
+              <div class="streamlined-schedule-box">
+                <div class="schedule-pair">
+                  <div class="field-group">
+                    <label for="overview-pickup-date">Borrow Date</label>
+                    <input id="overview-pickup-date" v-model="availabilityForm.pickupDate" type="date" :min="today" required />
+                  </div>
+                  <div class="field-group">
+                    <label for="overview-pickup-time">Borrow Time</label>
+                    <input id="overview-pickup-time" v-model="availabilityForm.pickupTime" type="time" required />
+                  </div>
                 </div>
-                <div class="field-group">
-                  <label for="overview-pickup-time">Borrow time</label>
-                  <input id="overview-pickup-time" v-model="availabilityForm.pickupTime" type="time" required />
-                </div>
-              </div>
 
-              <div class="date-row">
-                <div class="field-group">
-                  <label for="overview-return-date">Return date</label>
-                  <input id="overview-return-date" v-model="availabilityForm.dropoffDate" type="date" :min="availabilityForm.pickupDate || today" required />
-                </div>
-                <div class="field-group">
-                  <label for="overview-return-time">Return time</label>
-                  <input id="overview-return-time" v-model="availabilityForm.dropoffTime" type="time" required />
+                <div class="schedule-pair">
+                  <div class="field-group">
+                    <label for="overview-return-date">Return Date</label>
+                    <input id="overview-return-date" v-model="availabilityForm.dropoffDate" type="date" :min="availabilityForm.pickupDate || today" required />
+                  </div>
+                  <div class="field-group">
+                    <label for="overview-return-time">Return Time</label>
+                    <input id="overview-return-time" v-model="availabilityForm.dropoffTime" type="time" required />
+                  </div>
                 </div>
               </div>
 
@@ -161,17 +202,17 @@
                 </select>
               </div>
 
-              <button class="primary-button wide" type="button" @click="checkAvailability">🔎 Check availability</button>
+              <button class="primary-button wide" type="button" @click="checkAvailability">Check Availability</button>
               <p v-if="availabilityError" class="form-error" role="alert">{{ availabilityError }}</p>
               <div v-if="availabilityChecked" class="availability-results" aria-live="polite">
                 <h4>{{ availableVehicles.length }} vehicle{{ availableVehicles.length === 1 ? '' : 's' }} available</h4>
                 <p class="form-note">For {{ availabilityForm.pickupDate }} {{ availabilityForm.pickupTime }} to {{ availabilityForm.dropoffDate }} {{ availabilityForm.dropoffTime }}</p>
                 <div v-if="availableVehicles.length" class="availability-car-list">
                   <div v-for="car in availableVehicles" :key="car.name" class="availability-car-row">
-                    <span class="availability-car-icon">{{ car.icon }}</span>
+                    <span class="availability-car-badge">{{ car.brand }}</span>
                     <div class="availability-car-info"><strong>{{ car.name }}</strong><small>{{ car.brand }} · {{ car.type }} · {{ car.seats }} seats</small></div>
                     <strong>₱{{ car.price }}/day</strong>
-                    <button type="button" class="secondary-button" @click="continueWithVehicle(car)">Choose</button>
+                    <button type="button" class="primary-button small-btn" @click="openBookingModal(car)">Book Now</button>
                   </div>
                 </div>
                 <p v-else class="empty-message">No matching vehicles are available for those dates. Try another date or brand.</p>
@@ -183,8 +224,8 @@
           <section v-if="!isAdmin" class="car-browser">
             <div class="brand-filter">
               <div>
-                <p class="eyebrow">🚙 Browse by brand</p>
-                <h3>✨ Choose your preferred brand</h3>
+                <p class="eyebrow">Browse by Brand</p>
+                <h3>Choose Your Preferred Brand</h3>
               </div>
               <div class="brand-filter-options">
                 <button
@@ -203,13 +244,15 @@
             <article v-for="car in filteredCars" :key="car.name" class="car-card">
               <div class="car-card-header">
                 <div>
-                  <p class="eyebrow">Available vehicle</p>
+                  <p class="eyebrow">Vehicle</p>
                   <h3>{{ car.name }}</h3>
                   <span>{{ car.brand }} · {{ car.type }}</span>
                 </div>
-                <span :class="['status-badge', car.status === 'Available' ? 'confirmed' : 'pending']">{{ car.status }}</span>
+                <span :class="['status-badge', isCarAvailable(car) ? 'confirmed' : 'pending']">
+                  {{ isCarAvailable(car) ? 'Available' : 'Booked' }}
+                </span>
               </div>
-              <div class="car-illustration">{{ car.icon }}</div>
+              <div class="car-illustration car-badge-pill">{{ car.type }} · {{ car.seats }} Seats</div>
               <div class="car-card-footer">
                 <strong>₱{{ car.price }}<small>/day</small></strong>
                 <div class="car-specs">
@@ -218,6 +261,28 @@
                   <span>{{ car.fuel }}</span>
                 </div>
               </div>
+              <button
+                v-if="isCarAvailable(car)"
+                type="button"
+                class="primary-button card-book-btn"
+                @click="openBookingModal(car)"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Book Now</span>
+              </button>
+              <button
+                v-else
+                type="button"
+                class="secondary-button card-book-btn booked-btn"
+                disabled
+              >
+                <span>Already Booked</span>
+              </button>
             </article>
             </div>
           </section>
@@ -253,11 +318,11 @@
 
       <section v-else-if="activeView === 'bookings'" class="view-section">
         <div class="panel-card booking-form-card" v-if="!isAdmin">
-          <p class="eyebrow">🗓️ Plan your trip</p><h2>🚘 Create a rental booking</h2>
+          <p class="eyebrow">Plan Your Trip</p><h2>Create a Rental Booking</h2>
           <p class="panel-description">Enter your renter details first, then choose your vehicle and rental schedule.</p>
           <form class="rental-form" @submit.prevent="createBooking">
             <div class="renter-info-section">
-              <h3>👤 Renter Information</h3>
+              <h3>Renter Information</h3>
               <p>These details help the rental team contact you and verify your booking.</p>
             </div>
             <div class="form-field"><label for="renter-full-name">Full name</label><input id="renter-full-name" v-model.trim="bookingForm.renterName" autocomplete="name" required placeholder="Enter your full legal name" /></div>
@@ -267,53 +332,56 @@
             <div class="form-field"><label for="renter-license">Driver's license number</label><input id="renter-license" v-model.trim="bookingForm.licenseNumber" required placeholder="Enter your driver's license number" /></div>
             <div class="form-field"><label for="renter-license-expiry">License expiry date</label><input id="renter-license-expiry" v-model="bookingForm.licenseExpiry" type="date" required /></div>
             <div class="renter-info-section">
-              <h3>🚘 Rental Details</h3>
-              <p>Choose your pickup and drop-off locations, dates, times, and preferred vehicle.</p>
+              <h3>Rental Details</h3>
+              <p>Choose your rental dates, times, and preferred vehicle.</p>
             </div>
-            <div class="form-field">
-              <label for="pickup-location">📍 Pickup location</label>
-              <select id="pickup-location" v-model="bookingForm.pickup" required>
-                <option value="" disabled>Choose a pickup location</option>
-                <option v-for="place in nearbyPlaces" :key="`pickup-${place.name}`" :value="place.query">{{ place.name }}</option>
-                <option value="Other">Other location (enter manually)</option>
-              </select>
-              <input v-if="bookingForm.pickup === 'Other'" id="pickup-custom-location" v-model.trim="bookingForm.pickupCustom" required placeholder="Type your pickup address" />
+            <div class="form-schedule-grid">
+              <div class="form-field">
+                <label for="pickup-date">Pickup Date</label>
+                <input id="pickup-date" v-model="bookingForm.pickupDate" type="date" :min="today" required />
+              </div>
+              <div class="form-field">
+                <label for="pickup-time">Pickup Time</label>
+                <input id="pickup-time" v-model="bookingForm.pickupTime" type="time" required />
+              </div>
             </div>
-            <div class="form-field">
-              <label for="dropoff-location">🏁 Drop-off location</label>
-              <select id="dropoff-location" v-model="bookingForm.dropoff" required>
-                <option value="" disabled>Choose a drop-off location</option>
-                <option v-for="place in nearbyPlaces" :key="`dropoff-${place.name}`" :value="place.query">{{ place.name }}</option>
-                <option value="Other">Other location (enter manually)</option>
-              </select>
-              <input v-if="bookingForm.dropoff === 'Other'" id="dropoff-custom-location" v-model.trim="bookingForm.dropoffCustom" required placeholder="Type your drop-off address" />
+            <div class="form-schedule-grid">
+              <div class="form-field">
+                <label for="dropoff-date">Drop-off Date</label>
+                <input id="dropoff-date" v-model="bookingForm.dropoffDate" type="date" :min="bookingForm.pickupDate || today" required />
+              </div>
+              <div class="form-field">
+                <label for="dropoff-time">Drop-off Time</label>
+                <input id="dropoff-time" v-model="bookingForm.dropoffTime" type="time" required />
+              </div>
             </div>
-            <div class="form-field"><label for="pickup-date">📅 Pickup date</label><input id="pickup-date" v-model="bookingForm.pickupDate" type="date" required /></div>
-            <div class="form-field"><label for="pickup-time">⏰ Pickup time</label><input id="pickup-time" v-model="bookingForm.pickupTime" type="time" required /></div>
-            <div class="form-field"><label for="dropoff-date">📅 Drop-off date</label><input id="dropoff-date" v-model="bookingForm.dropoffDate" type="date" required /></div>
-            <div class="form-field"><label for="dropoff-time">⏰ Drop-off time</label><input id="dropoff-time" v-model="bookingForm.dropoffTime" type="time" required /></div>
-            <div class="form-field"><label for="rental-brand">🚗 Preferred vehicle</label><select id="rental-brand" v-model="bookingForm.brand"><option>Any brand</option><option>Mazda</option><option>Toyota</option><option>Suzuki</option><option>Honda</option><option>Nissan</option></select></div>
-            <div class="form-field"><label for="rental-notes">📝 Trip notes (optional)</label><input id="rental-notes" v-model.trim="bookingForm.notes" placeholder="Extra details for your booking" /></div>
-            <p v-if="bookingError" class="form-error">{{ bookingError }}</p><button type="submit" class="primary-button">✅ Submit booking request</button>
+            <div class="form-field"><label for="rental-brand">Preferred Vehicle</label><select id="rental-brand" v-model="bookingForm.brand"><option>Any brand</option><option>Mazda</option><option>Toyota</option><option>Suzuki</option><option>Honda</option><option>Nissan</option></select></div>
+            <div class="form-field"><label for="rental-notes">Trip Notes (optional)</label><input id="rental-notes" v-model.trim="bookingForm.notes" placeholder="Extra details for your booking" /></div>
+            <p v-if="bookingError" class="form-error">{{ bookingError }}</p><button type="submit" class="primary-button">Submit Booking Request</button>
           </form>
         </div>
-        <div class="panel-card"><h2>📅 {{ isAdmin ? 'Booking requests' : 'Your bookings' }}</h2>
+        <div class="panel-card"><h2>{{ isAdmin ? 'Booking Requests' : 'Your Bookings' }}</h2>
           <div class="booking-list">
             <div v-for="booking in bookings" :key="booking.id" class="booking-row">
               <div>
-                <strong>{{ booking.customer }} · {{ booking.brand }}</strong>
-                <span>📍 {{ booking.pickup }} → 🏁 {{ booking.dropoff }}</span>
+                <strong>
+                  {{ booking.customer }} · {{ booking.brand }}
+                  <span v-if="booking.carName">({{ booking.carName }})</span>
+                  <small v-if="booking.bookingRef" class="booking-ref-tag">#{{ booking.bookingRef }}</small>
+                </strong>
+                <span v-if="booking.pickup && booking.dropoff">{{ booking.pickup }} → {{ booking.dropoff }}</span>
+                <span v-if="booking.totalPrice" class="booking-price-tag">₱{{ booking.totalPrice }} ({{ booking.durationDays || 1 }} day{{ (booking.durationDays || 1) > 1 ? 's' : '' }})</span>
                 <span>{{ booking.notes || 'No extra notes' }}</span>
               </div>
               <span>Pickup {{ booking.pickupDate }} {{ booking.pickupTime }} · Drop-off {{ booking.dropoffDate }} {{ booking.dropoffTime }}</span>
               <span :class="['status-badge', booking.status.toLowerCase()]">{{ booking.status }}</span>
-            </div><p v-if="!bookings.length" class="empty-message">🚗 No bookings yet. Create your first rental request above.</p>
+            </div><p v-if="!bookings.length" class="empty-message">No bookings yet. Create your first rental request above.</p>
           </div>
         </div>
       </section>
       <section v-else-if="activeView === 'renter-information'" class="view-section">
         <div class="panel-card">
-          <p class="eyebrow">👤 Customer details</p>
+          <p class="eyebrow">Customer Details</p>
           <h2>Renter Information</h2>
           <p class="panel-description">Personal and contact details are shown here separately from your rental booking schedule.</p>
           <div class="renter-profile-list">
@@ -327,37 +395,37 @@
                 <span class="status-badge pending">Booking #{{ renter.bookingId }}</span>
               </div>
               <div class="renter-profile-grid">
-                <div class="renter-detail"><span>📞 Contact Number</span><strong>{{ renter.phone || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>✉️ Email Address</span><strong>{{ renter.email || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>🏠 Home Address</span><strong>{{ renter.address || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>🪪 Driver's License</span><strong>{{ renter.licenseNumber || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>📅 License Expiry</span><strong>{{ renter.licenseExpiry || 'Not provided' }}</strong></div>
-                <div class="renter-detail"><span>🚗 Preferred Vehicle</span><strong>{{ renter.brand || 'Any brand' }}</strong></div>
+                <div class="renter-detail"><span>Contact Number</span><strong>{{ renter.phone || 'Not provided' }}</strong></div>
+                <div class="renter-detail"><span>Email Address</span><strong>{{ renter.email || 'Not provided' }}</strong></div>
+                <div class="renter-detail"><span>Home Address</span><strong>{{ renter.address || 'Not provided' }}</strong></div>
+                <div class="renter-detail"><span>Driver's License</span><strong>{{ renter.licenseNumber || 'Not provided' }}</strong></div>
+                <div class="renter-detail"><span>License Expiry</span><strong>{{ renter.licenseExpiry || 'Not provided' }}</strong></div>
+                <div class="renter-detail"><span>Preferred Vehicle</span><strong>{{ renter.brand || 'Any brand' }}</strong></div>
               </div>
               <div class="renter-rental-summary">
                 <h4>Rental Details</h4>
                 <div class="renter-profile-grid">
-                  <div class="renter-detail"><span>📍 Pickup Location</span><strong>{{ renter.pickup || 'Not provided' }}</strong></div>
-                  <div class="renter-detail"><span>🏁 Drop-off Location</span><strong>{{ renter.dropoff || 'Not provided' }}</strong></div>
-                  <div class="renter-detail"><span>🗓️ Pickup Schedule</span><strong>{{ renter.pickupDate }} · {{ renter.pickupTime }}</strong></div>
-                  <div class="renter-detail"><span>🗓️ Return Schedule</span><strong>{{ renter.dropoffDate }} · {{ renter.dropoffTime }}</strong></div>
+                  <div v-if="renter.pickup" class="renter-detail"><span>Pickup Location</span><strong>{{ renter.pickup }}</strong></div>
+                  <div v-if="renter.dropoff" class="renter-detail"><span>Drop-off Location</span><strong>{{ renter.dropoff }}</strong></div>
+                  <div class="renter-detail"><span>Pickup Schedule</span><strong>{{ renter.pickupDate }} · {{ renter.pickupTime }}</strong></div>
+                  <div class="renter-detail"><span>Return Schedule</span><strong>{{ renter.dropoffDate }} · {{ renter.dropoffTime }}</strong></div>
                 </div>
               </div>
             </article>
-            <p v-if="!renterInformation.length" class="empty-message">👤 No renter profiles yet. Complete a booking and each renter's information will appear here as a separate profile card.</p>
+            <p v-if="!renterInformation.length" class="empty-message">No renter profiles yet. Complete a booking and each renter's information will appear here as a separate profile card.</p>
           </div>
         </div>
       </section>
       <section v-else-if="activeView === 'nearby'" class="view-section">
-        <div class="panel-card"><p class="eyebrow">🧭 Explore around you</p><h2>📍 Nearby places & map</h2>
+        <div class="panel-card"><p class="eyebrow">Explore Around You</p><h2>Nearby Places & Map</h2>
           <p class="panel-description">Search for an address or place to view it on OpenStreetMap. Allow location access to use your current location.</p>
-          <div class="location-search"><input v-model.trim="mapSearch" aria-label="Search map location" placeholder="Search a place or address..." @keyup.enter="openMapSearch" /><button class="primary-button" @click="openMapSearch">🔎 Search map</button><button class="secondary-button" @click="useCurrentLocation">📡 Use my location</button></div>
+          <div class="location-search"><input v-model.trim="mapSearch" aria-label="Search map location" placeholder="Search a place or address..." @keyup.enter="openMapSearch" /><button class="primary-button" @click="openMapSearch">Search Map</button><button class="secondary-button" @click="useCurrentLocation">Use My Location</button></div>
           <p v-if="locationMessage" class="location-message">{{ locationMessage }}</p>
           <div class="map-frame"><iframe title="OpenStreetMap location map" :src="mapEmbedUrl" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
-          <a class="map-link" :href="mapSearchUrl" target="_blank" rel="noopener noreferrer">🗺️ Open full map in OpenStreetMap ↗</a>
+          <a class="map-link" :href="mapSearchUrl" target="_blank" rel="noopener noreferrer">Open full map in OpenStreetMap ↗</a>
         </div>
-        <div class="panel-card"><h2>✨ Popular places to explore</h2><p class="panel-description">Example destinations. Select one to view its map; verify the address and travel details before leaving.</p>
-          <div class="places-grid"><button v-for="place in nearbyPlaces" :key="place.name" class="place-card" @click="selectNearbyPlace(place)"><span class="place-emoji">{{ place.icon }}</span><strong>{{ place.name }}</strong><span>{{ place.description }}</span><small>📍 View on map ↗</small></button></div>
+        <div class="panel-card"><h2>Popular Places to Explore</h2><p class="panel-description">Example destinations. Select one to view its map; verify the address and travel details before leaving.</p>
+          <div class="places-grid"><button v-for="place in nearbyPlaces" :key="place.name" class="place-card" @click="selectNearbyPlace(place)"><span class="place-marker-dot"></span><strong>{{ place.name }}</strong><span>{{ place.description }}</span><small>View on map ↗</small></button></div>
         </div>
       </section>
 
@@ -365,7 +433,7 @@
         <div class="panel-card messages-panel">
           <div class="messages-heading">
             <div>
-              <p class="eyebrow">💬 Stay connected</p>
+              <p class="eyebrow">Communication</p>
               <h2>{{ isAdmin ? 'Customer Messages' : 'Messages & Support' }}</h2>
               <p class="panel-description">{{ isAdmin ? 'Open a conversation to read it and reply to the renter.' : 'Send a question about your booking or ask the rental team for help.' }}</p>
             </div>
@@ -403,18 +471,18 @@
                 <form class="message-compose" @submit.prevent="sendMessage">
                   <label class="sr-only" for="reply-message">Write a message</label>
                   <textarea id="reply-message" v-model.trim="messageDraft" rows="2" maxlength="2000" placeholder="Write your message..." required></textarea>
-                  <button class="primary-button" type="submit" :disabled="!messageDraft.trim()">Send message ➤</button>
+                  <button class="primary-button" type="submit" :disabled="!messageDraft.trim()">Send Message</button>
                 </form>
               </template>
               <template v-else>
                 <div class="new-message-placeholder">
                   <template v-if="isAdmin">
-                    <span class="placeholder-icon">📭</span>
+                    <span class="placeholder-icon-empty"></span>
                     <h3>No customer conversations yet</h3>
                     <p>When a renter sends a message, their conversation will appear on the left. Open it to reply.</p>
                   </template>
                   <template v-else>
-                    <span class="placeholder-icon">✉️</span>
+                    <span class="placeholder-icon-empty"></span>
                     <h3>Start a conversation</h3>
                     <p>Send a message to the rental team. Include your booking reference if you already made a reservation.</p>
                     <form class="new-message-form" @submit.prevent="startConversation">
@@ -422,7 +490,7 @@
                       <input id="message-subject" v-model.trim="messageSubject" maxlength="100" placeholder="e.g. Question about my booking" required />
                       <label for="first-message">Message</label>
                       <textarea id="first-message" v-model.trim="messageDraft" rows="4" maxlength="2000" placeholder="How can we help you?" required></textarea>
-                      <button class="primary-button" type="submit" :disabled="!messageSubject.trim() || !messageDraft.trim()">Send to rental support ➤</button>
+                      <button class="primary-button" type="submit" :disabled="!messageSubject.trim() || !messageDraft.trim()">Send to Rental Support</button>
                     </form>
                   </template>
                 </div>
@@ -435,11 +503,362 @@
 
 
     </main>
+
+    <!-- Booking & Confirmation Modal -->
+    <div
+      v-if="isBookingModalOpen"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="booking-modal-title"
+      @click.self="closeBookingModal"
+    >
+      <div class="modal-dialog">
+        <!-- Modal Header -->
+        <header class="modal-header">
+          <div>
+            <p class="modal-eyebrow">
+              <span v-if="bookingModalStep === 1">Step 1 of 2: Reservation Details</span>
+              <span v-else-if="bookingModalStep === 2">Step 2 of 2: Review &amp; Confirm</span>
+              <span v-else>Reservation Complete</span>
+            </p>
+            <h2 id="booking-modal-title">
+              {{
+                bookingModalStep === 1
+                  ? 'Reserve Your Vehicle'
+                  : bookingModalStep === 2
+                  ? 'Confirm Your Booking'
+                  : 'Booking Confirmed!'
+              }}
+            </h2>
+          </div>
+          <button class="modal-close-btn" type="button" aria-label="Close modal" @click="closeBookingModal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </header>
+
+        <!-- Stepper Progress Bar -->
+        <div class="modal-steps-indicator">
+          <div class="step-item" :class="{ active: bookingModalStep === 1, completed: bookingModalStep > 1 }">
+            <span class="step-number">1</span>
+            <span class="step-text">Details</span>
+          </div>
+          <div class="step-line" :class="{ filled: bookingModalStep >= 2 }"></div>
+          <div class="step-item" :class="{ active: bookingModalStep === 2, completed: bookingModalStep > 2 }">
+            <span class="step-number">2</span>
+            <span class="step-text">Confirmation</span>
+          </div>
+          <div class="step-line" :class="{ filled: bookingModalStep === 3 }"></div>
+          <div class="step-item" :class="{ active: bookingModalStep === 3 }">
+            <span class="step-number">✓</span>
+            <span class="step-text">Confirmed</span>
+          </div>
+        </div>
+
+        <!-- Modal Body: Step 1 (Booking Form) -->
+        <div v-if="bookingModalStep === 1" class="modal-body">
+          <!-- Selected Vehicle Info Banner -->
+          <div class="modal-vehicle-banner">
+            <div class="modal-vehicle-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13"></rect>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                <circle cx="18.5" cy="18.5" r="2.5"></circle>
+              </svg>
+            </div>
+            <div class="modal-vehicle-info">
+              <div class="modal-vehicle-title">
+                <h3>{{ modalCar?.name }}</h3>
+                <span class="modal-badge">{{ modalCar?.brand }} · {{ modalCar?.type }}</span>
+              </div>
+              <div class="modal-vehicle-tags">
+                <span>{{ modalCar?.seats }} Seats</span>
+                <span>{{ modalCar?.transmission }}</span>
+                <span>{{ modalCar?.fuel }}</span>
+              </div>
+            </div>
+            <div class="modal-vehicle-rate">
+              <span class="rate-label">Daily Rate</span>
+              <strong>₱{{ modalCar?.price }}<small>/day</small></strong>
+            </div>
+          </div>
+
+          <!-- Switch Car Selector -->
+          <div class="form-field full-width">
+            <label for="modal-car-select">Select Vehicle</label>
+            <select id="modal-car-select" v-model="selectedModalCarName">
+              <option v-for="c in cars" :key="c.name" :value="c.name">
+                {{ c.name }} ({{ c.brand }} · {{ c.type }}) — ₱{{ c.price }}/day
+              </option>
+            </select>
+          </div>
+
+          <!-- Section: Schedule -->
+          <div class="modal-section-title">
+            <h4>Rental Schedule</h4>
+            <span class="modal-section-hint">{{ modalRentalDays }} day{{ modalRentalDays > 1 ? 's' : '' }} duration</span>
+          </div>
+
+          <div class="form-schedule-grid">
+            <div class="form-field">
+              <label for="modal-pickup-date">Pickup Date</label>
+              <input id="modal-pickup-date" v-model="modalForm.pickupDate" type="date" :min="today" required />
+            </div>
+            <div class="form-field">
+              <label for="modal-pickup-time">Pickup Time</label>
+              <input id="modal-pickup-time" v-model="modalForm.pickupTime" type="time" required />
+            </div>
+          </div>
+
+          <div class="form-schedule-grid">
+            <div class="form-field">
+              <label for="modal-dropoff-date">Return Date</label>
+              <input id="modal-dropoff-date" v-model="modalForm.dropoffDate" type="date" :min="modalForm.pickupDate || today" required />
+            </div>
+            <div class="form-field">
+              <label for="modal-dropoff-time">Return Time</label>
+              <input id="modal-dropoff-time" v-model="modalForm.dropoffTime" type="time" required />
+            </div>
+          </div>
+
+          <!-- Section: Renter Information -->
+          <div class="modal-section-title">
+            <h4>Renter Information</h4>
+            <span class="modal-section-hint">Required for driver verification</span>
+          </div>
+
+          <div class="form-schedule-grid">
+            <div class="form-field">
+              <label for="modal-renter-name">Full Name</label>
+              <input id="modal-renter-name" v-model.trim="modalForm.renterName" placeholder="Your full name" required />
+            </div>
+            <div class="form-field">
+              <label for="modal-renter-phone">Contact Number</label>
+              <input id="modal-renter-phone" v-model.trim="modalForm.phone" type="tel" placeholder="09XX XXX XXXX" required />
+            </div>
+          </div>
+
+          <div class="form-schedule-grid">
+            <div class="form-field">
+              <label for="modal-renter-email">Email Address</label>
+              <input id="modal-renter-email" v-model.trim="modalForm.email" type="email" placeholder="you@example.com" required />
+            </div>
+            <div class="form-field">
+              <label for="modal-renter-address">Home Address</label>
+              <input id="modal-renter-address" v-model.trim="modalForm.address" placeholder="Street, City" required />
+            </div>
+          </div>
+
+          <div class="form-schedule-grid">
+            <div class="form-field">
+              <label for="modal-license-number">Driver's License Number</label>
+              <input id="modal-license-number" v-model.trim="modalForm.licenseNumber" placeholder="e.g. N01-12-345678" required />
+            </div>
+            <div class="form-field">
+              <label for="modal-license-expiry">License Expiry Date</label>
+              <input id="modal-license-expiry" v-model="modalForm.licenseExpiry" type="date" :min="today" required />
+            </div>
+          </div>
+
+          <div class="form-field full-width">
+            <label for="modal-notes">Trip Notes (optional)</label>
+            <input id="modal-notes" v-model.trim="modalForm.notes" placeholder="e.g. Flight arrival time, requests" />
+          </div>
+
+          <!-- Price Calculation Box -->
+          <div class="modal-price-box">
+            <div class="price-row">
+              <span>Rental Rate ({{ modalRentalDays }} day{{ modalRentalDays > 1 ? 's' : '' }} × ₱{{ modalCar?.price }})</span>
+              <strong>₱{{ modalTotalPrice }}</strong>
+            </div>
+            <div class="price-row total-highlight">
+              <span>Estimated Total Due</span>
+              <strong class="total-amount">₱{{ modalTotalPrice }}</strong>
+            </div>
+          </div>
+
+          <p v-if="modalError" class="modal-error-alert" role="alert">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ modalError }}</span>
+          </p>
+        </div>
+
+        <!-- Modal Body: Step 2 (Confirmation Review) -->
+        <div v-else-if="bookingModalStep === 2" class="modal-body confirmation-view">
+          <div class="confirmation-notice">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <div>
+              <strong>Please review your booking details before confirming.</strong>
+              <small>Ensure your schedule, vehicle selection, and contact details are accurate.</small>
+            </div>
+          </div>
+
+          <!-- Receipt Summary Card -->
+          <div class="confirmation-card">
+            <!-- Vehicle Summary -->
+            <div class="confirm-block">
+              <span class="confirm-label">Selected Vehicle</span>
+              <div class="confirm-car-row">
+                <div>
+                  <h4>{{ modalCar?.name }}</h4>
+                  <p>{{ modalCar?.brand }} · {{ modalCar?.type }} · {{ modalCar?.seats }} Seats · {{ modalCar?.transmission }}</p>
+                </div>
+                <strong class="confirm-car-rate">₱{{ modalCar?.price }} / day</strong>
+              </div>
+            </div>
+
+            <div class="confirm-divider"></div>
+
+            <!-- Schedule & Locations -->
+            <div class="confirm-grid">
+              <div class="confirm-item">
+                <span class="confirm-label">Borrow Schedule</span>
+                <strong>{{ modalForm.pickupDate }} · {{ modalForm.pickupTime }}</strong>
+              </div>
+              <div class="confirm-item">
+                <span class="confirm-label">Return Schedule</span>
+                <strong>{{ modalForm.dropoffDate }} · {{ modalForm.dropoffTime }}</strong>
+              </div>
+              <div class="confirm-item">
+                <span class="confirm-label">Rental Duration</span>
+                <strong>{{ modalRentalDays }} Day{{ modalRentalDays > 1 ? 's' : '' }}</strong>
+              </div>
+              <div class="confirm-item">
+                <span class="confirm-label">Payment Method</span>
+                <strong>Pay on Pickup (Cash / Card / GCash)</strong>
+              </div>
+            </div>
+
+            <div class="confirm-divider"></div>
+
+            <!-- Renter Info -->
+            <div class="confirm-grid">
+              <div class="confirm-item">
+                <span class="confirm-label">Renter Name</span>
+                <strong>{{ modalForm.renterName }}</strong>
+              </div>
+              <div class="confirm-item">
+                <span class="confirm-label">Contact Number</span>
+                <strong>{{ modalForm.phone }}</strong>
+              </div>
+              <div class="confirm-item">
+                <span class="confirm-label">Email Address</span>
+                <strong>{{ modalForm.email }}</strong>
+              </div>
+              <div class="confirm-item">
+                <span class="confirm-label">Driver's License</span>
+                <strong>{{ modalForm.licenseNumber }} (Exp: {{ modalForm.licenseExpiry }})</strong>
+              </div>
+              <div class="confirm-item full-span">
+                <span class="confirm-label">Home Address</span>
+                <strong>{{ modalForm.address }}</strong>
+              </div>
+              <div v-if="modalForm.notes" class="confirm-item full-span">
+                <span class="confirm-label">Trip Notes</span>
+                <strong>{{ modalForm.notes }}</strong>
+              </div>
+            </div>
+
+            <div class="confirm-divider"></div>
+
+            <!-- Pricing Breakdown -->
+            <div class="confirm-price-summary">
+              <div class="confirm-price-row">
+                <span>Daily Rate</span>
+                <span>₱{{ modalCar?.price }} × {{ modalRentalDays }} day{{ modalRentalDays > 1 ? 's' : '' }}</span>
+              </div>
+              <div class="confirm-price-row total">
+                <span>Total Amount to Pay</span>
+                <strong>₱{{ modalTotalPrice }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Body: Step 3 (Confirmed Success Screen) -->
+        <div v-else-if="bookingModalStep === 3" class="modal-body success-view">
+          <div class="success-icon-wrap">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <h3>Booking Successfully Confirmed!</h3>
+          <p class="success-subtitle">
+            Your reservation reference number is
+            <span class="booking-ref-badge">#{{ confirmedBookingId }}</span>
+          </p>
+
+          <div class="success-card">
+            <div class="success-summary-row">
+              <span>Reserved Vehicle:</span>
+              <strong>{{ confirmedBookingSummary?.carName }} ({{ confirmedBookingSummary?.brand }})</strong>
+            </div>
+            <div class="success-summary-row">
+              <span>Rental Period:</span>
+              <strong>{{ confirmedBookingSummary?.pickupDate }} {{ confirmedBookingSummary?.pickupTime }} → {{ confirmedBookingSummary?.dropoffDate }} {{ confirmedBookingSummary?.dropoffTime }}</strong>
+            </div>
+            <div class="success-summary-row">
+              <span>Total Price:</span>
+              <strong class="success-price">₱{{ confirmedBookingSummary?.totalPrice }} ({{ confirmedBookingSummary?.days }} days)</strong>
+            </div>
+            <div class="success-summary-row">
+              <span>Renter:</span>
+              <strong>{{ confirmedBookingSummary?.renterName }} ({{ confirmedBookingSummary?.phone }})</strong>
+            </div>
+          </div>
+
+          <div class="success-instructions">
+            <p>💡 <strong>Pickup Tip:</strong> Please present a valid government-issued ID and your physical driver's license when claiming the vehicle key.</p>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <footer class="modal-footer">
+          <template v-if="bookingModalStep === 1">
+            <button class="secondary-button" type="button" @click="closeBookingModal">Cancel</button>
+            <button class="primary-button" type="button" @click="goToConfirmation">
+              Proceed to Confirmation →
+            </button>
+          </template>
+          <template v-else-if="bookingModalStep === 2">
+            <button class="secondary-button" type="button" @click="bookingModalStep = 1">
+              ← Edit Details
+            </button>
+            <button class="primary-button confirm-action-btn" type="button" @click="confirmModalBooking">
+              Confirm Booking
+            </button>
+          </template>
+          <template v-else-if="bookingModalStep === 3">
+            <button class="secondary-button" type="button" @click="closeBookingModal">
+              Stay in Overview
+            </button>
+            <button class="secondary-button" type="button" @click="viewRenterInfoFromModal">
+              View Renter Profile
+            </button>
+            <button class="primary-button" type="button" @click="viewBookingsFromModal">
+              View My Bookings
+            </button>
+          </template>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { clearSessionUser, getSessionUser } from '../../auth'
 import logoImage from '../../assets/logo.png'
@@ -458,12 +877,12 @@ const expandedVehicleId = ref(null)
 const isAdmin = computed(() => props.role === 'admin' || sessionUser?.role === 'admin')
 
 const navItems = computed(() => [
-  { key: 'dashboard', label: 'Overview', icon: '🏠' },
-  ...(isAdmin.value ? [{ key: 'fleet', label: 'Fleet', icon: '🚗' }] : []),
-  { key: 'bookings', label: 'Bookings', icon: '📅' },
-  ...(!isAdmin.value ? [{ key: 'renter-information', label: 'Renter Information', icon: '👤' }] : []),
-  ...(!isAdmin.value ? [{ key: 'nearby', label: 'Nearby places', icon: '📍' }] : []),
-  { key: 'messages', label: 'Messages', icon: '💬' },
+  { key: 'dashboard', label: 'Overview' },
+  ...(isAdmin.value ? [{ key: 'fleet', label: 'Fleet' }] : []),
+  { key: 'bookings', label: 'Bookings' },
+  ...(!isAdmin.value ? [{ key: 'renter-information', label: 'Renter Information' }] : []),
+  ...(!isAdmin.value ? [{ key: 'nearby', label: 'Nearby Places' }] : []),
+  { key: 'messages', label: 'Messages' },
 ])
 
 const pageTitle = computed(() => {
@@ -497,38 +916,96 @@ const logout = () => {
   router.push('/signin')
 }
 
+
 const today = new Date().toISOString().slice(0, 10)
 const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+
+const cars = [
+  { name: 'Mazda 3', brand: 'Mazda', type: 'Compact Sedan', price: 85, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '', tint: 'blue' },
+  { name: 'Toyota Camry', brand: 'Toyota', type: 'Comfort Sedan', price: 95, transmission: 'Automatic', seats: 5, fuel: 'Hybrid', status: 'Available', icon: '', tint: 'navy' },
+  { name: 'Suzuki Ertiga', brand: 'Suzuki', type: 'Family MPV', price: 80, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '', tint: 'slate' },
+  { name: 'Honda Civic', brand: 'Honda', type: 'Sport Sedan', price: 105, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '', tint: 'sky' },
+  { name: 'Nissan X-Trail', brand: 'Nissan', type: 'Luxury SUV', price: 125, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '', tint: 'blue' },
+]
+
+const bookingStorageKey = 'motor-car-rental-bookings'
+const renterStorageKey = 'motor-car-rental-renters'
+
+const loadStoredBookings = () => {
+  try {
+    const raw = localStorage.getItem(bookingStorageKey)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+const loadStoredRenters = () => {
+  try {
+    const raw = localStorage.getItem(renterStorageKey)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+const bookings = ref(loadStoredBookings())
+const renterInformation = ref(loadStoredRenters())
+
+const persistBookings = () => {
+  try {
+    localStorage.setItem(bookingStorageKey, JSON.stringify(bookings.value))
+  } catch (e) {
+    console.warn('Failed to save bookings in localStorage', e)
+  }
+}
+
+const persistRenters = () => {
+  try {
+    localStorage.setItem(renterStorageKey, JSON.stringify(renterInformation.value))
+  } catch (e) {
+    console.warn('Failed to save renters in localStorage', e)
+  }
+}
+
+watch(bookings, persistBookings, { deep: true })
+watch(renterInformation, persistRenters, { deep: true })
+
 const availabilityForm = ref({ pickupDate: today, pickupTime: '09:00', dropoffDate: tomorrow, dropoffTime: '18:00', brand: 'Any brand' })
 const availabilityChecked = ref(false)
 const availabilityError = ref('')
 const bookingForm = ref({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickup: '', dropoff: '', pickupCustom: '', dropoffCustom: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
+
+watch(() => availabilityForm.value.pickupDate, (newPickup) => {
+  if (newPickup && availabilityForm.value.dropoffDate < newPickup) {
+    availabilityForm.value.dropoffDate = newPickup
+  }
+})
+
+watch(() => bookingForm.value.pickupDate, (newPickup) => {
+  if (newPickup && bookingForm.value.dropoffDate < newPickup) {
+    bookingForm.value.dropoffDate = newPickup
+  }
+})
 const bookingError = ref('')
-const bookings = ref([])
-const renterInformation = ref([])
+
 const mapSearch = ref('Cagayan de Oro, Philippines')
 const mapQuery = ref('Cagayan de Oro, Philippines')
 const locationMessage = ref('')
 const mapEmbedUrl = computed(() => `https://www.google.com/maps?q=${encodeURIComponent(mapQuery.value)}&output=embed`)
 const mapSearchUrl = computed(() => `https://www.openstreetmap.org/search?query=${encodeURIComponent(mapQuery.value)}`)
 const nearbyPlaces = [
-  { name: 'Centrio Mall', icon: '🛍️', description: 'Shopping and dining', query: 'Centrio Mall, Cagayan de Oro, Philippines' },
-  { name: 'Limketkai Center', icon: '🏬', description: 'Shopping and entertainment', query: 'Limketkai Center, Cagayan de Oro, Philippines' },
-  { name: 'Gaston Park', icon: '🌳', description: 'City park and open space', query: 'Gaston Park, Cagayan de Oro, Philippines' },
-  { name: 'Museo de Oro', icon: '🏛️', description: 'Local history and culture', query: 'Museo de Oro, Cagayan de Oro, Philippines' },
-  { name: 'Macabalan Port', icon: '⛴️', description: 'Port and ferry area', query: 'Macabalan Port, Cagayan de Oro, Philippines' },
-  { name: 'SM CDO Downtown Premier', icon: '🛒', description: 'Shopping and restaurants', query: 'SM CDO Downtown Premier, Cagayan de Oro, Philippines' },
+  { name: 'Centrio Mall', icon: '', description: 'Shopping and dining', query: 'Centrio Mall, Cagayan de Oro, Philippines' },
+  { name: 'Limketkai Center', icon: '', description: 'Shopping and entertainment', query: 'Limketkai Center, Cagayan de Oro, Philippines' },
+  { name: 'Gaston Park', icon: '', description: 'City park and open space', query: 'Gaston Park, Cagayan de Oro, Philippines' },
+  { name: 'Museo de Oro', icon: '', description: 'Local history and culture', query: 'Museo de Oro, Cagayan de Oro, Philippines' },
+  { name: 'Macabalan Port', icon: '', description: 'Port and ferry area', query: 'Macabalan Port, Cagayan de Oro, Philippines' },
+  { name: 'SM CDO Downtown Premier', icon: '', description: 'Shopping and restaurants', query: 'SM CDO Downtown Premier, Cagayan de Oro, Philippines' },
 ]
-const bookingFormDefaults = () => ({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickup: '', dropoff: '', pickupCustom: '', dropoffCustom: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
+const bookingFormDefaults = () => ({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
 const createBooking = () => {
   bookingError.value = ''
-  const pickup = bookingForm.value.pickup === 'Other' ? bookingForm.value.pickupCustom.trim() : bookingForm.value.pickup
-  const dropoff = bookingForm.value.dropoff === 'Other' ? bookingForm.value.dropoffCustom.trim() : bookingForm.value.dropoff
 
-  if (!pickup || !dropoff) {
-    bookingError.value = 'Please choose or enter both pickup and drop-off locations.'
-    return
-  }
   if (bookingForm.value.licenseExpiry && bookingForm.value.licenseExpiry < today) {
     bookingError.value = 'Your driver’s license must not be expired.'
     return
@@ -538,9 +1015,11 @@ const createBooking = () => {
     return
   }
   const bookingId = Date.now()
+  const refCode = `BK-${String(bookingId).slice(-6)}`
   const renterRecord = {
     id: bookingId,
     bookingId,
+    bookingRef: refCode,
     renterName: bookingForm.value.renterName,
     phone: bookingForm.value.phone,
     email: bookingForm.value.email,
@@ -548,8 +1027,6 @@ const createBooking = () => {
     licenseNumber: bookingForm.value.licenseNumber,
     licenseExpiry: bookingForm.value.licenseExpiry,
     brand: bookingForm.value.brand,
-    pickup,
-    dropoff,
     pickupDate: bookingForm.value.pickupDate,
     pickupTime: bookingForm.value.pickupTime,
     dropoffDate: bookingForm.value.dropoffDate,
@@ -558,6 +1035,7 @@ const createBooking = () => {
   renterInformation.value.unshift(renterRecord)
   bookings.value.unshift({
     id: bookingId,
+    bookingRef: refCode,
     customer: bookingForm.value.renterName,
     renterName: bookingForm.value.renterName,
     phone: bookingForm.value.phone,
@@ -565,15 +1043,17 @@ const createBooking = () => {
     address: bookingForm.value.address,
     licenseNumber: bookingForm.value.licenseNumber,
     licenseExpiry: bookingForm.value.licenseExpiry,
-    pickup, dropoff,
     pickupDate: bookingForm.value.pickupDate,
     pickupTime: bookingForm.value.pickupTime,
     dropoffDate: bookingForm.value.dropoffDate,
     dropoffTime: bookingForm.value.dropoffTime,
     brand: bookingForm.value.brand,
     notes: bookingForm.value.notes,
-    status: 'Pending'
+    status: 'Pending',
+    createdAt: new Date().toISOString()
   })
+  persistBookings()
+  persistRenters()
   bookingForm.value = bookingFormDefaults()
   activeView.value = 'renter-information'
 }
@@ -594,17 +1074,9 @@ const useCurrentLocation = () => {
     const { latitude, longitude } = position.coords
     mapQuery.value = `${latitude},${longitude}`
     mapSearch.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
-    locationMessage.value = '📍 Current coordinates loaded. Open the full map for nearby results.'
+    locationMessage.value = 'Current coordinates loaded. Open the full map for nearby results.'
   }, () => { locationMessage.value = 'Location access was not available. You can search for a place manually.' }, { enableHighAccuracy: true, timeout: 10000 })
 }
-
-const cars = [
-  { name: 'Mazda 3', brand: 'Mazda', type: 'Compact Sedan', price: 85, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '🚘', tint: 'blue' },
-  { name: 'Toyota Camry', brand: 'Toyota', type: 'Comfort Sedan', price: 95, transmission: 'Automatic', seats: 5, fuel: 'Hybrid', status: 'Available', icon: '🚙', tint: 'navy' },
-  { name: 'Suzuki Ertiga', brand: 'Suzuki', type: 'Family MPV', price: 80, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '🚙', tint: 'slate' },
-  { name: 'Honda Civic', brand: 'Honda', type: 'Sport Sedan', price: 105, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '🚗', tint: 'sky' },
-  { name: 'Nissan X-Trail', brand: 'Nissan', type: 'Luxury SUV', price: 125, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '🚘', tint: 'blue' },
-]
 
 const selectedBrand = ref('Any brand')
 const brandFilters = ['Any brand', 'Mazda', 'Toyota', 'Suzuki', 'Honda', 'Nissan']
@@ -650,14 +1122,226 @@ const checkAvailability = () => {
   availabilityChecked.value = true
 }
 
-const continueWithVehicle = (car) => {
-  bookingForm.value.brand = car.brand
-  bookingForm.value.pickupDate = availabilityForm.value.pickupDate
-  bookingForm.value.pickupTime = availabilityForm.value.pickupTime
-  bookingForm.value.dropoffDate = availabilityForm.value.dropoffDate
-  bookingForm.value.dropoffTime = availabilityForm.value.dropoffTime
+// Calculate duration in days between pickup and dropoff
+const calculateRentalDays = (startDate, startTime, endDate, endTime) => {
+  if (!startDate || !endDate) return 1
+  const start = new Date(`${startDate}T${startTime || '00:00'}`)
+  const end = new Date(`${endDate}T${endTime || '00:00'}`)
+  const diffMs = end.getTime() - start.getTime()
+  if (isNaN(diffMs) || diffMs <= 0) return 1
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+  return Math.max(1, days)
+}
+
+// Modal State & Handlers
+const isBookingModalOpen = ref(false)
+const bookingModalStep = ref(1) // 1: details, 2: confirmation, 3: success
+const modalCar = ref(cars[0])
+const modalForm = ref({
+  renterName: '',
+  phone: '',
+  email: '',
+  address: '',
+  licenseNumber: '',
+  licenseExpiry: '',
+  pickupDate: today,
+  pickupTime: '09:00',
+  dropoffDate: tomorrow,
+  dropoffTime: '18:00',
+  notes: '',
+})
+const modalError = ref('')
+const confirmedBookingId = ref('')
+const confirmedBookingSummary = ref(null)
+
+const selectedModalCarName = computed({
+  get: () => modalCar.value?.name || cars[0].name,
+  set: (val) => {
+    const found = cars.find((c) => c.name === val)
+    if (found) modalCar.value = found
+  },
+})
+
+const modalRentalDays = computed(() => {
+  return calculateRentalDays(
+    modalForm.value.pickupDate,
+    modalForm.value.pickupTime,
+    modalForm.value.dropoffDate,
+    modalForm.value.dropoffTime
+  )
+})
+
+const modalTotalPrice = computed(() => {
+  const price = modalCar.value?.price || 85
+  return modalRentalDays.value * price
+})
+
+watch(() => modalForm.value.pickupDate, (newPickup) => {
+  if (newPickup && modalForm.value.dropoffDate < newPickup) {
+    modalForm.value.dropoffDate = newPickup
+  }
+})
+
+const openBookingModal = (car = null) => {
+  if (car) {
+    modalCar.value = car
+  } else {
+    const matching = availabilityForm.value.brand !== 'Any brand'
+      ? cars.find((c) => c.brand === availabilityForm.value.brand)
+      : null
+    modalCar.value = matching || cars[0]
+  }
+
+  const pDate = availabilityForm.value.pickupDate || today
+  const pTime = availabilityForm.value.pickupTime || '09:00'
+  const dDate = availabilityForm.value.dropoffDate || tomorrow
+  const dTime = availabilityForm.value.dropoffTime || '18:00'
+
+  modalForm.value = {
+    renterName: sessionUser?.fullName || '',
+    phone: '',
+    email: sessionUser?.email || '',
+    address: '',
+    licenseNumber: '',
+    licenseExpiry: '',
+    pickupDate: pDate,
+    pickupTime: pTime,
+    dropoffDate: dDate,
+    dropoffTime: dTime,
+    notes: '',
+  }
+  modalError.value = ''
+  bookingModalStep.value = 1
+  isBookingModalOpen.value = true
+}
+
+const closeBookingModal = () => {
+  isBookingModalOpen.value = false
+  bookingModalStep.value = 1
+  modalError.value = ''
+}
+
+const goToConfirmation = () => {
+  modalError.value = ''
+  const f = modalForm.value
+  if (!f.renterName || !f.phone || !f.email || !f.address || !f.licenseNumber || !f.licenseExpiry) {
+    modalError.value = 'Please complete all required renter information fields.'
+    return
+  }
+  if (f.licenseExpiry < today) {
+    modalError.value = 'Driver’s license must not be expired.'
+    return
+  }
+  if (f.dropoffDate < f.pickupDate || (f.dropoffDate === f.pickupDate && f.dropoffTime <= f.pickupTime)) {
+    modalError.value = 'Return date and time must be after the borrow date and time.'
+    return
+  }
+  bookingModalStep.value = 2
+}
+
+const confirmModalBooking = () => {
+  const f = modalForm.value
+  const car = modalCar.value
+  const days = calculateRentalDays(f.pickupDate, f.pickupTime, f.dropoffDate, f.dropoffTime)
+  const totalPrice = days * (car?.price || 85)
+  const bookingId = Date.now()
+  const refCode = `BK-${String(bookingId).slice(-6)}`
+
+  const renterRecord = {
+    id: bookingId,
+    bookingId,
+    bookingRef: refCode,
+    renterName: f.renterName,
+    phone: f.phone,
+    email: f.email,
+    address: f.address,
+    licenseNumber: f.licenseNumber,
+    licenseExpiry: f.licenseExpiry,
+    brand: car.brand,
+    carName: car.name,
+    pickupDate: f.pickupDate,
+    pickupTime: f.pickupTime,
+    dropoffDate: f.dropoffDate,
+    dropoffTime: f.dropoffTime,
+    durationDays: days,
+    totalPrice,
+  }
+
+  const bookingRecord = {
+    id: bookingId,
+    bookingRef: refCode,
+    customer: f.renterName,
+    renterName: f.renterName,
+    phone: f.phone,
+    email: f.email,
+    address: f.address,
+    licenseNumber: f.licenseNumber,
+    licenseExpiry: f.licenseExpiry,
+    brand: car.brand,
+    carName: car.name,
+    pickupDate: f.pickupDate,
+    pickupTime: f.pickupTime,
+    dropoffDate: f.dropoffDate,
+    dropoffTime: f.dropoffTime,
+    durationDays: days,
+    totalPrice,
+    notes: f.notes,
+    status: 'Confirmed',
+    createdAt: new Date().toISOString(),
+  }
+
+  renterInformation.value.unshift(renterRecord)
+  bookings.value.unshift(bookingRecord)
+  persistBookings()
+  persistRenters()
+
+  confirmedBookingId.value = refCode
+  confirmedBookingSummary.value = {
+    carName: car.name,
+    brand: car.brand,
+    type: car.type,
+    rate: car.price,
+    renterName: f.renterName,
+    phone: f.phone,
+    email: f.email,
+    pickupDate: f.pickupDate,
+    pickupTime: f.pickupTime,
+    dropoffDate: f.dropoffDate,
+    dropoffTime: f.dropoffTime,
+    days,
+    totalPrice,
+  }
+
+  bookingModalStep.value = 3
+}
+
+const viewBookingsFromModal = () => {
+  closeBookingModal()
   activeView.value = 'bookings'
 }
+
+const viewRenterInfoFromModal = () => {
+  closeBookingModal()
+  activeView.value = 'renter-information'
+}
+
+const continueWithVehicle = (car) => {
+  openBookingModal(car)
+}
+
+const handleKeyDown = (e) => {
+  if (e.key === 'Escape' && isBookingModalOpen.value) {
+    closeBookingModal()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 
 const trips = [
   { name: 'Jenna Cooper', borrowDate: 'Sep 18', borrowTime: '09:30', returnDate: 'Sep 22' },
@@ -1943,4 +2627,760 @@ const sendMessage = () => {
 .messaging-note { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 760px) { .messaging-layout { grid-template-columns: 1fr; } .conversation-sidebar { border-right: 0; border-bottom: 1px solid var(--line); max-height: 230px; overflow-y: auto; } .message-compose { flex-direction: column; align-items: stretch; } .messages-heading { flex-direction: column; } .new-message-placeholder { padding: 20px; } }
+
+/* Streamlined Schedule & Date Layout */
+.streamlined-schedule-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.schedule-pair,
+.form-schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .schedule-pair,
+  .form-schedule-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nav-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  color: inherit;
+}
+
+.nav-text-label {
+  font-weight: 500;
+}
+
+.new-booking-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-svg {
+  color: var(--muted, #6d7b8d);
+  flex-shrink: 0;
+}
+
+.availability-car-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: var(--brand-soft, #eaf3ff);
+  color: var(--brand, #0f6fff);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.car-badge-pill {
+  padding: 8px 14px;
+  background: #f1f5f9;
+  color: #334155;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.place-marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand, #0f6fff);
+  display: inline-block;
+  margin-right: 6px;
+}
+
+/* Overview Car Card Booking Button */
+.card-book-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card-book-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(15, 111, 255, 0.32);
+}
+
+.quick-booking-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.quick-booking-actions .primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.small-btn {
+  padding: 8px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.booking-ref-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(15, 111, 255, 0.1);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.booking-price-tag {
+  display: inline-block;
+  color: var(--accent-dark);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Modal Backdrop & Container */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-dialog {
+  background: #ffffff;
+  width: 100%;
+  max-width: 660px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.3), 0 0 0 1px rgba(148, 163, 184, 0.15);
+  overflow: hidden;
+  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(20px) scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #f8faff 0%, #ffffff 100%);
+}
+
+.modal-eyebrow {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.modal-close-btn {
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.modal-close-btn:hover {
+  background: #e2e8f0;
+  color: var(--text);
+  transform: rotate(90deg);
+}
+
+/* Modal Stepper Indicator */
+.modal-steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 28px;
+  background: #fbfdff;
+  border-bottom: 1px solid var(--line);
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.step-item.active {
+  color: var(--accent-dark);
+}
+
+.step-item.completed {
+  color: #10b981;
+}
+
+.step-number {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.step-item.active .step-number {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 111, 255, 0.35);
+}
+
+.step-item.completed .step-number {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.step-line {
+  flex: 1;
+  max-width: 48px;
+  height: 2px;
+  background: #e2e8f0;
+  border-radius: 2px;
+}
+
+.step-line.filled {
+  background: #10b981;
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 24px 28px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+/* Vehicle Banner in Modal */
+.modal-vehicle-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #eef5ff 0%, #f4f8fe 100%);
+  border: 1px solid rgba(15, 111, 255, 0.18);
+  border-radius: 16px;
+}
+
+.modal-vehicle-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(15, 111, 255, 0.12);
+}
+
+.modal-vehicle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-vehicle-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.modal-vehicle-title h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.modal-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  background: rgba(15, 111, 255, 0.12);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.modal-vehicle-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.modal-vehicle-tags span {
+  font-size: 11px;
+  color: #475569;
+  background: #ffffff;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  font-weight: 500;
+}
+
+.modal-vehicle-rate {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.rate-label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.modal-vehicle-rate strong {
+  font-size: 1.35rem;
+  color: var(--accent-dark);
+}
+
+.modal-vehicle-rate strong small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Modal Form Section Headers */
+.modal-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-top: 6px;
+}
+
+.modal-section-title h4 {
+  margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #475569;
+  font-weight: 700;
+}
+
+.modal-section-hint {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Modal Price Box */
+.modal-price-box {
+  padding: 16px 18px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+}
+
+.price-row.total-highlight {
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.total-amount {
+  font-size: 1.35rem;
+  color: var(--accent-dark);
+}
+
+.modal-error-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Step 2: Confirmation Screen */
+.confirmation-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
+.confirmation-notice strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.confirmation-notice small {
+  display: block;
+  font-size: 12px;
+  color: #3b82f6;
+}
+
+.confirmation-card {
+  background: #fafcff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+}
+
+.confirm-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.confirm-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.confirm-car-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.confirm-car-row h4 {
+  margin: 0 0 2px;
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.confirm-car-row p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.confirm-car-rate {
+  font-size: 1.1rem;
+  color: var(--accent-dark);
+  white-space: nowrap;
+}
+
+.confirm-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 16px 0;
+}
+
+.confirm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.confirm-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.confirm-item.full-span {
+  grid-column: 1 / -1;
+}
+
+.confirm-item strong {
+  font-size: 13px;
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+
+.confirm-price-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.confirm-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+}
+
+.confirm-price-row.total {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.confirm-price-row.total strong {
+  font-size: 1.45rem;
+  color: var(--accent-dark);
+}
+
+/* Step 3: Success Screen */
+.success-view {
+  text-align: center;
+  padding: 30px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.success-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 28px rgba(16, 185, 129, 0.35);
+  animation: successPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.success-view h3 {
+  margin: 0;
+  font-size: 1.55rem;
+  color: #0f172a;
+}
+
+.success-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.booking-ref-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(15, 111, 255, 0.12);
+  color: var(--accent);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-left: 4px;
+}
+
+.success-card {
+  width: 100%;
+  max-width: 520px;
+  background: #f8fbff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  margin-top: 6px;
+}
+
+.success-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.success-summary-row span {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.success-summary-row strong {
+  color: var(--text);
+  text-align: right;
+  overflow-wrap: break-word;
+}
+
+.success-price {
+  color: #059669 !important;
+  font-size: 14px;
+}
+
+.success-instructions {
+  width: 100%;
+  max-width: 520px;
+  padding: 12px 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  color: #92400e;
+  font-size: 13px;
+  text-align: left;
+}
+
+.success-instructions p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 1px solid var(--line);
+  background: #ffffff;
+}
+
+.modal-footer button {
+  min-height: 44px;
+}
+
+.confirm-action-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.3) !important;
+}
+
+.confirm-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .modal-dialog {
+    max-height: 94vh;
+    border-radius: 18px;
+  }
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .confirm-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+  .modal-footer button {
+    width: 100%;
+  }
+}
+
 </style>
