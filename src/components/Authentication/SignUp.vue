@@ -110,10 +110,12 @@
 
         <button
           class="signup-button"
+          :disabled="isSigningUp"
           @click="signUp"
         >
-          Sign Up
+          {{ isSigningUp ? 'Creating account…' : 'Sign Up' }}
         </button>
+        <p v-if="signupError" class="signup-error" role="alert">{{ signupError }}</p>
 
 
         <!-- SIGN IN -->
@@ -132,10 +134,11 @@
 </template>
 
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { registerUser } from '../../auth'
+import { setSessionUser } from '../../auth'
+import { api, setToken, type AuthResponse } from '../../api/client'
 import logoImage from '../../assets/logo.png'
 import authWallpaper from '../../assets/authwallpaper.png'
 
@@ -147,36 +150,42 @@ const confirmPassword = ref('')
 
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const isSigningUp = ref(false)
+const signupError = ref('')
 
-const signUp = () => {
+const signUp = async () => {
   if (
     !fullName.value ||
     !email.value ||
     !password.value ||
     !confirmPassword.value
   ) {
-    alert('Please fill in all fields.')
+    signupError.value = 'Please fill in all fields.'
     return
   }
 
   if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match.')
+    signupError.value = 'Passwords do not match.'
     return
   }
 
-  const saved = registerUser({
-    fullName: fullName.value,
-    email: email.value,
-    password: password.value,
-  })
-
-  if (!saved) {
-    alert('An account with this email already exists.')
-    return
+  isSigningUp.value = true
+  signupError.value = ''
+  try {
+    const result = await api<AuthResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ fullName: fullName.value, email: email.value, password: password.value }),
+    })
+    const token = result.token || result.access
+    if (!token) throw new Error('The backend did not return an authentication token.')
+    setToken(token)
+    setSessionUser(result.user)
+    await router.push('/dashboard/user')
+  } catch (error) {
+    signupError.value = error instanceof Error ? error.message : 'Unable to create the account.'
+  } finally {
+    isSigningUp.value = false
   }
-
-  alert('Account created successfully!')
-  router.push('/dashboard/user')
 }
 </script>
 
@@ -625,6 +634,12 @@ const signUp = () => {
 
 .signup-button:hover {
   background: #002c50;
+}
+
+.signup-error {
+  margin-top: 12px;
+  color: #b42318;
+  font-size: 0.9rem;
 }
 
 

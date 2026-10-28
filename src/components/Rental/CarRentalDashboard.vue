@@ -42,15 +42,12 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
-            <svg v-else-if="item.key === 'nearby'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
             <svg v-else-if="item.key === 'messages'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
           </span>
           <span class="nav-text-label">{{ item.label }}</span>
+          <span v-if="item.key === 'messages' && unreadMessageCount" class="unread-count">{{ unreadMessageCount }}</span>
         </button>
       </nav>
 
@@ -92,6 +89,7 @@
           <button class="logout-button" @click="logout">Logout</button>
         </div>
       </header>
+      <p v-if="dashboardError && activeView !== 'messages'" class="form-error dashboard-error" role="alert">{{ dashboardError }}</p>
 
       <section v-if="activeView === 'dashboard'" class="view-section">
         <section v-if="isAdmin" class="stats-grid">
@@ -204,19 +202,9 @@
 
               <button class="primary-button wide" type="button" @click="checkAvailability">Check Availability</button>
               <p v-if="availabilityError" class="form-error" role="alert">{{ availabilityError }}</p>
-              <div v-if="availabilityChecked" class="availability-results" aria-live="polite">
-                <h4>{{ availableVehicles.length }} vehicle{{ availableVehicles.length === 1 ? '' : 's' }} available</h4>
-                <p class="form-note">For {{ availabilityForm.pickupDate }} {{ availabilityForm.pickupTime }} to {{ availabilityForm.dropoffDate }} {{ availabilityForm.dropoffTime }}</p>
-                <div v-if="availableVehicles.length" class="availability-car-list">
-                  <div v-for="car in availableVehicles" :key="car.name" class="availability-car-row">
-                    <span class="availability-car-badge">{{ car.brand }}</span>
-                    <div class="availability-car-info"><strong>{{ car.name }}</strong><small>{{ car.brand }} · {{ car.type }} · {{ car.seats }} seats</small></div>
-                    <strong>₱{{ car.price }}/day</strong>
-                    <button type="button" class="primary-button small-btn" @click="openBookingModal(car)">Book Now</button>
-                  </div>
-                </div>
-                <p v-else class="empty-message">No matching vehicles are available for those dates. Try another date or brand.</p>
-              </div>
+              <p v-if="availabilityChecked" class="form-note" aria-live="polite">
+                {{ availableVehicles.length }} vehicle{{ availableVehicles.length === 1 ? '' : 's' }} available for these dates. See the vehicle cards below.
+              </p>
             </div>
 
           </aside>
@@ -357,7 +345,7 @@
             </div>
             <div class="form-field"><label for="rental-brand">Preferred Vehicle</label><select id="rental-brand" v-model="bookingForm.brand"><option>Any brand</option><option>Mazda</option><option>Toyota</option><option>Suzuki</option><option>Honda</option><option>Nissan</option></select></div>
             <div class="form-field"><label for="rental-notes">Trip Notes (optional)</label><input id="rental-notes" v-model.trim="bookingForm.notes" placeholder="Extra details for your booking" /></div>
-            <p v-if="bookingError" class="form-error">{{ bookingError }}</p><button type="submit" class="primary-button">Submit Booking Request</button>
+            <p v-if="bookingError" class="form-error" role="alert">{{ bookingError }}</p><button type="submit" class="primary-button" :disabled="isSubmittingBooking">{{ isSubmittingBooking ? 'Submitting…' : 'Submit Booking Request' }}</button>
           </form>
         </div>
         <div class="panel-card"><h2>{{ isAdmin ? 'Booking Requests' : 'Your Bookings' }}</h2>
@@ -369,12 +357,21 @@
                   <span v-if="booking.carName">({{ booking.carName }})</span>
                   <small v-if="booking.bookingRef" class="booking-ref-tag">#{{ booking.bookingRef }}</small>
                 </strong>
+                <span v-if="isAdmin">{{ booking.customerEmail }} · {{ booking.phone || 'No phone provided' }}</span>
                 <span v-if="booking.pickup && booking.dropoff">{{ booking.pickup }} → {{ booking.dropoff }}</span>
                 <span v-if="booking.totalPrice" class="booking-price-tag">₱{{ booking.totalPrice }} ({{ booking.durationDays || 1 }} day{{ (booking.durationDays || 1) > 1 ? 's' : '' }})</span>
                 <span>{{ booking.notes || 'No extra notes' }}</span>
               </div>
               <span>Pickup {{ booking.pickupDate }} {{ booking.pickupTime }} · Drop-off {{ booking.dropoffDate }} {{ booking.dropoffTime }}</span>
-              <span :class="['status-badge', booking.status.toLowerCase()]">{{ booking.status }}</span>
+              <div class="booking-status-actions">
+                <span :class="['status-badge', booking.status.toLowerCase()]">{{ booking.status }}</span>
+                <template v-if="isAdmin && booking.status.toLowerCase() === 'pending'">
+                  <button class="primary-button small-btn" type="button" :disabled="statusUpdatingId === booking.id" @click="updateBookingStatus(booking, 'confirmed')">
+                    {{ statusUpdatingId === booking.id ? 'Saving…' : 'Confirm' }}
+                  </button>
+                  <button class="secondary-button small-btn" type="button" :disabled="statusUpdatingId === booking.id" @click="updateBookingStatus(booking, 'rejected')">Reject</button>
+                </template>
+              </div>
             </div><p v-if="!bookings.length" class="empty-message">No bookings yet. Create your first rental request above.</p>
           </div>
         </div>
@@ -416,19 +413,6 @@
           </div>
         </div>
       </section>
-      <section v-else-if="activeView === 'nearby'" class="view-section">
-        <div class="panel-card"><p class="eyebrow">Explore Around You</p><h2>Nearby Places & Map</h2>
-          <p class="panel-description">Search for an address or place to view it on OpenStreetMap. Allow location access to use your current location.</p>
-          <div class="location-search"><input v-model.trim="mapSearch" aria-label="Search map location" placeholder="Search a place or address..." @keyup.enter="openMapSearch" /><button class="primary-button" @click="openMapSearch">Search Map</button><button class="secondary-button" @click="useCurrentLocation">Use My Location</button></div>
-          <p v-if="locationMessage" class="location-message">{{ locationMessage }}</p>
-          <div class="map-frame"><iframe title="OpenStreetMap location map" :src="mapEmbedUrl" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
-          <a class="map-link" :href="mapSearchUrl" target="_blank" rel="noopener noreferrer">Open full map in OpenStreetMap ↗</a>
-        </div>
-        <div class="panel-card"><h2>Popular Places to Explore</h2><p class="panel-description">Example destinations. Select one to view its map; verify the address and travel details before leaving.</p>
-          <div class="places-grid"><button v-for="place in nearbyPlaces" :key="place.name" class="place-card" @click="selectNearbyPlace(place)"><span class="place-marker-dot"></span><strong>{{ place.name }}</strong><span>{{ place.description }}</span><small>View on map ↗</small></button></div>
-        </div>
-      </section>
-
       <section v-else-if="activeView === 'messages'" class="view-section">
         <div class="panel-card messages-panel">
           <div class="messages-heading">
@@ -450,7 +434,7 @@
                   <span class="conversation-subject">{{ thread.subject }}</span>
                   <small>{{ thread.messages[thread.messages.length - 1]?.text || 'No messages yet' }}</small>
                 </span>
-                <span v-if="thread.messages.some(m => m.senderRole !== (isAdmin ? 'admin' : 'user')) && !thread.readBy?.includes(isAdmin ? 'admin' : 'user')" class="unread-dot" aria-label="Unread message"></span>
+                <span v-if="thread.messages.some(m => m.senderRole !== (isAdmin ? 'admin' : 'user') && !m.isRead)" class="unread-dot" aria-label="Unread message"></span>
               </button>
               <p v-if="!messageThreads.length" class="empty-message conversation-empty">No conversations yet. Send your first message below.</p>
             </aside>
@@ -497,7 +481,7 @@
               </template>
             </div>
           </div>
-          <p class="messaging-note">Messages are saved in this browser for this demo. To deliver messages between different users or devices, connect this feature to the Django backend.</p>
+          <p v-if="dashboardError" class="form-error" role="alert">{{ dashboardError }}</p>
         </div>
       </section>
 
@@ -528,7 +512,7 @@
                   ? 'Reserve Your Vehicle'
                   : bookingModalStep === 2
                   ? 'Confirm Your Booking'
-                  : 'Booking Confirmed!'
+                  : 'Booking Request Sent'
               }}
             </h2>
           </div>
@@ -554,7 +538,7 @@
           <div class="step-line" :class="{ filled: bookingModalStep === 3 }"></div>
           <div class="step-item" :class="{ active: bookingModalStep === 3 }">
             <span class="step-number">✓</span>
-            <span class="step-text">Confirmed</span>
+            <span class="step-text">Submitted</span>
           </div>
         </div>
 
@@ -794,9 +778,9 @@
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
-          <h3>Booking Successfully Confirmed!</h3>
+          <h3>Booking Request Submitted</h3>
           <p class="success-subtitle">
-            Your reservation reference number is
+            Your request is pending admin approval. Track updates in Messages. Reference
             <span class="booking-ref-badge">#{{ confirmedBookingId }}</span>
           </p>
 
@@ -836,8 +820,8 @@
             <button class="secondary-button" type="button" @click="bookingModalStep = 1">
               ← Edit Details
             </button>
-            <button class="primary-button confirm-action-btn" type="button" @click="confirmModalBooking">
-              Confirm Booking
+            <button class="primary-button confirm-action-btn" type="button" :disabled="isSubmittingBooking" @click="confirmModalBooking">
+              {{ isSubmittingBooking ? 'Submitting…' : 'Submit Booking Request' }}
             </button>
           </template>
           <template v-else-if="bookingModalStep === 3">
@@ -861,6 +845,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { clearSessionUser, getSessionUser } from '../../auth'
+import { api, clearToken } from '../../api/client'
 import logoImage from '../../assets/logo.png'
 
 const props = defineProps({
@@ -881,7 +866,6 @@ const navItems = computed(() => [
   ...(isAdmin.value ? [{ key: 'fleet', label: 'Fleet' }] : []),
   { key: 'bookings', label: 'Bookings' },
   ...(!isAdmin.value ? [{ key: 'renter-information', label: 'Renter Information' }] : []),
-  ...(!isAdmin.value ? [{ key: 'nearby', label: 'Nearby Places' }] : []),
   { key: 'messages', label: 'Messages' },
 ])
 
@@ -892,7 +876,6 @@ const pageTitle = computed(() => {
     bookings: 'Bookings',
     'renter-information': 'Renter Information',
     messages: 'Messages',
-    nearby: 'Nearby places',
   }
   return titles[activeView.value] || 'Overview'
 })
@@ -912,69 +895,39 @@ const toggleVehicle = (vehicleId) => {
 }
 
 const logout = () => {
+  clearToken()
   clearSessionUser()
   router.push('/signin')
 }
 
 
-const today = new Date().toISOString().slice(0, 10)
-const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+const dateInputValue = (date) => {
+  const localDate = new Date(date)
+  localDate.setMinutes(localDate.getMinutes() - localDate.getTimezoneOffset())
+  return localDate.toISOString().slice(0, 10)
+}
+const today = dateInputValue(new Date())
+const tomorrow = dateInputValue(new Date(Date.now() + 86400000))
+const dayAfterTomorrow = dateInputValue(new Date(Date.now() + 2 * 86400000))
 
-const cars = [
+const cars = ref([
   { name: 'Mazda 3', brand: 'Mazda', type: 'Compact Sedan', price: 85, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '', tint: 'blue' },
   { name: 'Toyota Camry', brand: 'Toyota', type: 'Comfort Sedan', price: 95, transmission: 'Automatic', seats: 5, fuel: 'Hybrid', status: 'Available', icon: '', tint: 'navy' },
   { name: 'Suzuki Ertiga', brand: 'Suzuki', type: 'Family MPV', price: 80, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '', tint: 'slate' },
   { name: 'Honda Civic', brand: 'Honda', type: 'Sport Sedan', price: 105, transmission: 'Automatic', seats: 5, fuel: 'Petrol', status: 'Available', icon: '', tint: 'sky' },
   { name: 'Nissan X-Trail', brand: 'Nissan', type: 'Luxury SUV', price: 125, transmission: 'Automatic', seats: 7, fuel: 'Petrol', status: 'Available', icon: '', tint: 'blue' },
-]
+])
 
-const bookingStorageKey = 'motor-car-rental-bookings'
-const renterStorageKey = 'motor-car-rental-renters'
-
-const loadStoredBookings = () => {
-  try {
-    const raw = localStorage.getItem(bookingStorageKey)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-const loadStoredRenters = () => {
-  try {
-    const raw = localStorage.getItem(renterStorageKey)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-const bookings = ref(loadStoredBookings())
-const renterInformation = ref(loadStoredRenters())
-
-const persistBookings = () => {
-  try {
-    localStorage.setItem(bookingStorageKey, JSON.stringify(bookings.value))
-  } catch (e) {
-    console.warn('Failed to save bookings in localStorage', e)
-  }
-}
-
-const persistRenters = () => {
-  try {
-    localStorage.setItem(renterStorageKey, JSON.stringify(renterInformation.value))
-  } catch (e) {
-    console.warn('Failed to save renters in localStorage', e)
-  }
-}
-
-watch(bookings, persistBookings, { deep: true })
-watch(renterInformation, persistRenters, { deep: true })
-
-const availabilityForm = ref({ pickupDate: today, pickupTime: '09:00', dropoffDate: tomorrow, dropoffTime: '18:00', brand: 'Any brand' })
+const bookings = ref([])
+const renterInformation = ref([])
+const messageThreads = ref([])
+const dashboardError = ref('')
+const isSubmittingBooking = ref(false)
+const statusUpdatingId = ref(null)
+const availabilityForm = ref({ pickupDate: tomorrow, pickupTime: '09:00', dropoffDate: dayAfterTomorrow, dropoffTime: '18:00', brand: 'Any brand' })
 const availabilityChecked = ref(false)
 const availabilityError = ref('')
-const bookingForm = ref({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickup: '', dropoff: '', pickupCustom: '', dropoffCustom: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
+const bookingForm = ref({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickup: '', dropoff: '', pickupCustom: '', dropoffCustom: '', pickupDate: tomorrow, pickupTime: '09:00', dropoffDate: dayAfterTomorrow, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
 
 watch(() => availabilityForm.value.pickupDate, (newPickup) => {
   if (newPickup && availabilityForm.value.dropoffDate < newPickup) {
@@ -989,118 +942,90 @@ watch(() => bookingForm.value.pickupDate, (newPickup) => {
 })
 const bookingError = ref('')
 
-const mapSearch = ref('Cagayan de Oro, Philippines')
-const mapQuery = ref('Cagayan de Oro, Philippines')
-const locationMessage = ref('')
-const mapEmbedUrl = computed(() => `https://www.google.com/maps?q=${encodeURIComponent(mapQuery.value)}&output=embed`)
-const mapSearchUrl = computed(() => `https://www.openstreetmap.org/search?query=${encodeURIComponent(mapQuery.value)}`)
-const nearbyPlaces = [
-  { name: 'Centrio Mall', icon: '', description: 'Shopping and dining', query: 'Centrio Mall, Cagayan de Oro, Philippines' },
-  { name: 'Limketkai Center', icon: '', description: 'Shopping and entertainment', query: 'Limketkai Center, Cagayan de Oro, Philippines' },
-  { name: 'Gaston Park', icon: '', description: 'City park and open space', query: 'Gaston Park, Cagayan de Oro, Philippines' },
-  { name: 'Museo de Oro', icon: '', description: 'Local history and culture', query: 'Museo de Oro, Cagayan de Oro, Philippines' },
-  { name: 'Macabalan Port', icon: '', description: 'Port and ferry area', query: 'Macabalan Port, Cagayan de Oro, Philippines' },
-  { name: 'SM CDO Downtown Premier', icon: '', description: 'Shopping and restaurants', query: 'SM CDO Downtown Premier, Cagayan de Oro, Philippines' },
-]
-const bookingFormDefaults = () => ({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickupDate: today, pickupTime: '09:00', dropoffDate: today, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
-const createBooking = () => {
+const carIdByName = ref({})
+const bookingFormDefaults = () => ({ renterName: '', phone: '', email: '', address: '', licenseNumber: '', licenseExpiry: '', pickupDate: tomorrow, pickupTime: '09:00', dropoffDate: dayAfterTomorrow, dropoffTime: '18:00', brand: 'Any brand', notes: '' })
+const submitBookingToBackend = async (car, form, note = '') => {
+  const carId = carIdByName.value[car.name]
+  if (!carId) throw new Error('This vehicle is missing from the backend. Refresh the vehicle list and try again.')
+  return api('/bookings', {
+    method: 'POST',
+    body: JSON.stringify({
+      carId,
+      borrowDate: form.pickupDate,
+      borrowTime: form.pickupTime,
+      returnDate: form.dropoffDate,
+      returnTime: form.dropoffTime,
+      pickupLocation: 'Main Office',
+      returnLocation: 'Main Office',
+      notes: note,
+    }),
+  })
+}
+
+const createBooking = async () => {
   bookingError.value = ''
 
   if (bookingForm.value.licenseExpiry && bookingForm.value.licenseExpiry < today) {
     bookingError.value = 'Your driver’s license must not be expired.'
     return
   }
+  if (bookingForm.value.pickupDate < today || (bookingForm.value.pickupDate === today && new Date(`${bookingForm.value.pickupDate}T${bookingForm.value.pickupTime}`) <= new Date())) {
+    bookingError.value = 'The borrow date and time must be in the future.'
+    return
+  }
   if (bookingForm.value.dropoffDate < bookingForm.value.pickupDate || (bookingForm.value.dropoffDate === bookingForm.value.pickupDate && bookingForm.value.dropoffTime <= bookingForm.value.pickupTime)) {
     bookingError.value = 'Drop-off must be after the pickup date and time.'
     return
   }
-  const bookingId = Date.now()
-  const refCode = `BK-${String(bookingId).slice(-6)}`
-  const renterRecord = {
-    id: bookingId,
-    bookingId,
-    bookingRef: refCode,
-    renterName: bookingForm.value.renterName,
-    phone: bookingForm.value.phone,
-    email: bookingForm.value.email,
-    address: bookingForm.value.address,
-    licenseNumber: bookingForm.value.licenseNumber,
-    licenseExpiry: bookingForm.value.licenseExpiry,
-    brand: bookingForm.value.brand,
-    pickupDate: bookingForm.value.pickupDate,
-    pickupTime: bookingForm.value.pickupTime,
-    dropoffDate: bookingForm.value.dropoffDate,
-    dropoffTime: bookingForm.value.dropoffTime,
+  const car = cars.value.find((vehicle) => (bookingForm.value.brand === 'Any brand' || vehicle.brand === bookingForm.value.brand) && isCarAvailable(vehicle))
+  if (!car) {
+    bookingError.value = 'No vehicle matches those dates. Choose another brand or rental schedule.'
+    return
   }
-  renterInformation.value.unshift(renterRecord)
-  bookings.value.unshift({
-    id: bookingId,
-    bookingRef: refCode,
-    customer: bookingForm.value.renterName,
-    renterName: bookingForm.value.renterName,
-    phone: bookingForm.value.phone,
-    email: bookingForm.value.email,
-    address: bookingForm.value.address,
-    licenseNumber: bookingForm.value.licenseNumber,
-    licenseExpiry: bookingForm.value.licenseExpiry,
-    pickupDate: bookingForm.value.pickupDate,
-    pickupTime: bookingForm.value.pickupTime,
-    dropoffDate: bookingForm.value.dropoffDate,
-    dropoffTime: bookingForm.value.dropoffTime,
-    brand: bookingForm.value.brand,
-    notes: bookingForm.value.notes,
-    status: 'Pending',
-    createdAt: new Date().toISOString()
-  })
-  persistBookings()
-  persistRenters()
-  bookingForm.value = bookingFormDefaults()
-  activeView.value = 'renter-information'
-}
-const openMapSearch = () => {
-  if (!mapSearch.value) return
-  mapQuery.value = mapSearch.value
-  locationMessage.value = `Showing map results for “${mapSearch.value}”.`
-}
-const selectNearbyPlace = (place) => {
-  mapSearch.value = place.query
-  mapQuery.value = place.query
-  locationMessage.value = `Map selected: ${place.name}.`
-}
-const useCurrentLocation = () => {
-  if (!navigator.geolocation) { locationMessage.value = 'Your browser does not support location access. Search for an address instead.'; return }
-  locationMessage.value = 'Requesting your location permission…'
-  navigator.geolocation.getCurrentPosition((position) => {
-    const { latitude, longitude } = position.coords
-    mapQuery.value = `${latitude},${longitude}`
-    mapSearch.value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
-    locationMessage.value = 'Current coordinates loaded. Open the full map for nearby results.'
-  }, () => { locationMessage.value = 'Location access was not available. You can search for a place manually.' }, { enableHighAccuracy: true, timeout: 10000 })
+
+  isSubmittingBooking.value = true
+  try {
+    await submitBookingToBackend(car, bookingForm.value, bookingForm.value.notes)
+    bookingForm.value = bookingFormDefaults()
+    activeView.value = 'bookings'
+    void refreshDashboardData().catch(() => {})
+  } catch (error) {
+    bookingError.value = error instanceof Error ? error.message : 'Unable to submit the booking.'
+  } finally {
+    isSubmittingBooking.value = false
+  }
 }
 
 const selectedBrand = ref('Any brand')
 const brandFilters = ['Any brand', 'Mazda', 'Toyota', 'Suzuki', 'Honda', 'Nissan']
 const filteredCars = computed(() => selectedBrand.value === 'Any brand'
-  ? cars
-  : cars.filter((car) => car.brand === selectedBrand.value))
+  ? cars.value
+  : cars.value.filter((car) => car.brand === selectedBrand.value))
+
+const isCarAvailable = (car) => {
+  if (car.status !== 'Available') return false
+
+  const requestedStart = `${availabilityForm.value.pickupDate}T${availabilityForm.value.pickupTime}`
+  const requestedEnd = `${availabilityForm.value.dropoffDate}T${availabilityForm.value.dropoffTime}`
+
+  return !bookings.value.some((booking) => {
+    if (['cancelled', 'rejected'].includes(booking.status.toLowerCase())) return false
+    if (booking.carName && booking.carName !== car.name) return false
+    if (!booking.carName) return false
+    if (!booking.pickupDate || !booking.dropoffDate) return false
+
+    const existingStart = `${booking.pickupDate}T${booking.pickupTime || '00:00'}`
+    const existingEnd = `${booking.dropoffDate}T${booking.dropoffTime || '00:00'}`
+    return requestedStart < existingEnd && requestedEnd > existingStart
+  })
+}
 
 const availableVehicles = computed(() => {
   if (!availabilityChecked.value || availabilityError.value) return []
-  const requestedStart = `${availabilityForm.value.pickupDate}T${availabilityForm.value.pickupTime}`
-  const requestedEnd = `${availabilityForm.value.dropoffDate}T${availabilityForm.value.dropoffTime}`
   const brandMatches = availabilityForm.value.brand === 'Any brand'
-    ? cars
-    : cars.filter((car) => car.brand === availabilityForm.value.brand)
-  return brandMatches.filter((car) => {
-    if (car.status !== 'Available') return false
-    return !bookings.value.some((booking) => {
-      if (booking.status === 'Cancelled' || booking.status === 'Rejected') return false
-      if (booking.brand !== 'Any brand' && booking.brand !== car.brand) return false
-      const existingStart = `${booking.pickupDate}T${booking.pickupTime}`
-      const existingEnd = `${booking.dropoffDate}T${booking.dropoffTime}`
-      return requestedStart < existingEnd && requestedEnd > existingStart
-    })
-  })
+    ? cars.value
+    : cars.value.filter((car) => car.brand === availabilityForm.value.brand)
+  return brandMatches.filter(isCarAvailable)
 })
 
 const checkAvailability = () => {
@@ -1115,11 +1040,16 @@ const checkAvailability = () => {
     availabilityError.value = 'The borrow date cannot be in the past.'
     return
   }
+  if (pickupDate === today && new Date(`${pickupDate}T${pickupTime}`) <= new Date()) {
+    availabilityError.value = 'The borrow time must be in the future.'
+    return
+  }
   if (dropoffDate < pickupDate || (dropoffDate === pickupDate && dropoffTime <= pickupTime)) {
     availabilityError.value = 'Return date and time must be after the borrow date and time.'
     return
   }
   availabilityChecked.value = true
+  selectedBrand.value = availabilityForm.value.brand
 }
 
 // Calculate duration in days between pickup and dropoff
@@ -1136,7 +1066,7 @@ const calculateRentalDays = (startDate, startTime, endDate, endTime) => {
 // Modal State & Handlers
 const isBookingModalOpen = ref(false)
 const bookingModalStep = ref(1) // 1: details, 2: confirmation, 3: success
-const modalCar = ref(cars[0])
+const modalCar = ref(null)
 const modalForm = ref({
   renterName: '',
   phone: '',
@@ -1155,9 +1085,9 @@ const confirmedBookingId = ref('')
 const confirmedBookingSummary = ref(null)
 
 const selectedModalCarName = computed({
-  get: () => modalCar.value?.name || cars[0].name,
+  get: () => modalCar.value?.name || cars.value[0]?.name || '',
   set: (val) => {
-    const found = cars.find((c) => c.name === val)
+    const found = cars.value.find((c) => c.name === val)
     if (found) modalCar.value = found
   },
 })
@@ -1187,9 +1117,13 @@ const openBookingModal = (car = null) => {
     modalCar.value = car
   } else {
     const matching = availabilityForm.value.brand !== 'Any brand'
-      ? cars.find((c) => c.brand === availabilityForm.value.brand)
+      ? cars.value.find((c) => c.brand === availabilityForm.value.brand)
       : null
-    modalCar.value = matching || cars[0]
+    modalCar.value = matching || cars.value[0] || null
+  }
+  if (!modalCar.value) {
+    dashboardError.value = 'No vehicles are available from the backend. Please try again later.'
+    return
   }
 
   const pDate = availabilityForm.value.pickupDate || today
@@ -1232,6 +1166,10 @@ const goToConfirmation = () => {
     modalError.value = 'Driver’s license must not be expired.'
     return
   }
+  if (f.pickupDate < today || (f.pickupDate === today && new Date(`${f.pickupDate}T${f.pickupTime}`) <= new Date())) {
+    modalError.value = 'The borrow date and time must be in the future.'
+    return
+  }
   if (f.dropoffDate < f.pickupDate || (f.dropoffDate === f.pickupDate && f.dropoffTime <= f.pickupTime)) {
     modalError.value = 'Return date and time must be after the borrow date and time.'
     return
@@ -1239,80 +1177,43 @@ const goToConfirmation = () => {
   bookingModalStep.value = 2
 }
 
-const confirmModalBooking = () => {
+const confirmModalBooking = async () => {
   const f = modalForm.value
   const car = modalCar.value
+  if (!car) {
+    modalError.value = 'Select a vehicle before submitting your booking.'
+    return
+  }
   const days = calculateRentalDays(f.pickupDate, f.pickupTime, f.dropoffDate, f.dropoffTime)
-  const totalPrice = days * (car?.price || 85)
-  const bookingId = Date.now()
-  const refCode = `BK-${String(bookingId).slice(-6)}`
+  isSubmittingBooking.value = true
+  modalError.value = ''
+  try {
+    const booking = await submitBookingToBackend(car, f, f.notes)
+    const bookingId = booking.id
+    confirmedBookingId.value = `BK-${bookingId}`
+    confirmedBookingSummary.value = {
+      carName: car.name,
+      brand: car.brand,
+      type: car.type,
+      rate: Number(booking.daily_rate ?? booking.price ?? car.price),
+      renterName: f.renterName,
+      phone: f.phone,
+      email: f.email,
+      pickupDate: f.pickupDate,
+      pickupTime: f.pickupTime,
+      dropoffDate: f.dropoffDate,
+      dropoffTime: f.dropoffTime,
+      days,
+      totalPrice: Number(booking.total_price ?? booking.totalPrice ?? booking.totalAmount),
+    }
 
-  const renterRecord = {
-    id: bookingId,
-    bookingId,
-    bookingRef: refCode,
-    renterName: f.renterName,
-    phone: f.phone,
-    email: f.email,
-    address: f.address,
-    licenseNumber: f.licenseNumber,
-    licenseExpiry: f.licenseExpiry,
-    brand: car.brand,
-    carName: car.name,
-    pickupDate: f.pickupDate,
-    pickupTime: f.pickupTime,
-    dropoffDate: f.dropoffDate,
-    dropoffTime: f.dropoffTime,
-    durationDays: days,
-    totalPrice,
+    bookingModalStep.value = 3
+    void refreshDashboardData().catch(() => {})
+  } catch (error) {
+    modalError.value = error instanceof Error ? error.message : 'Unable to submit the booking.'
+  } finally {
+    isSubmittingBooking.value = false
   }
-
-  const bookingRecord = {
-    id: bookingId,
-    bookingRef: refCode,
-    customer: f.renterName,
-    renterName: f.renterName,
-    phone: f.phone,
-    email: f.email,
-    address: f.address,
-    licenseNumber: f.licenseNumber,
-    licenseExpiry: f.licenseExpiry,
-    brand: car.brand,
-    carName: car.name,
-    pickupDate: f.pickupDate,
-    pickupTime: f.pickupTime,
-    dropoffDate: f.dropoffDate,
-    dropoffTime: f.dropoffTime,
-    durationDays: days,
-    totalPrice,
-    notes: f.notes,
-    status: 'Confirmed',
-    createdAt: new Date().toISOString(),
-  }
-
-  renterInformation.value.unshift(renterRecord)
-  bookings.value.unshift(bookingRecord)
-  persistBookings()
-  persistRenters()
-
-  confirmedBookingId.value = refCode
-  confirmedBookingSummary.value = {
-    carName: car.name,
-    brand: car.brand,
-    type: car.type,
-    rate: car.price,
-    renterName: f.renterName,
-    phone: f.phone,
-    email: f.email,
-    pickupDate: f.pickupDate,
-    pickupTime: f.pickupTime,
-    dropoffDate: f.dropoffDate,
-    dropoffTime: f.dropoffTime,
-    days,
-    totalPrice,
-  }
-
-  bookingModalStep.value = 3
 }
 
 const viewBookingsFromModal = () => {
@@ -1335,12 +1236,19 @@ const handleKeyDown = (e) => {
   }
 }
 
+let dashboardRefreshTimer
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown)
+  void refreshDashboardData().catch(() => {})
+  dashboardRefreshTimer = window.setInterval(() => {
+    void refreshDashboardData().catch(() => {})
+  }, 10000)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  window.clearInterval(dashboardRefreshTimer)
 })
 
 const trips = [
@@ -1380,56 +1288,223 @@ const fleetStats = [
   { label: 'Maintenance', value: '3', note: 'Due this week' },
 ]
 
-const messageStorageKey = 'motor-car-rental-message-threads'
-const loadMessageThreads = () => {
-  try {
-    const saved = localStorage.getItem(messageStorageKey)
-    return saved ? JSON.parse(saved) : []
-  } catch {
-    return []
-  }
-}
-const messageThreads = ref(loadMessageThreads())
-const selectedThreadId = ref(messageThreads.value[0]?.id ?? null)
+const selectedThreadId = ref(null)
 const messageDraft = ref('')
 const messageSubject = ref('')
 const activeThread = computed(() => messageThreads.value.find(thread => thread.id === selectedThreadId.value) || null)
-const formatMessageTime = () => new Date().toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
-const persistMessageThreads = () => {
-  try { localStorage.setItem(messageStorageKey, JSON.stringify(messageThreads.value)) } catch (error) { console.warn('Could not save messages in this browser.', error) }
+const unreadMessageCount = computed(() => messageThreads.value
+  .flatMap((thread) => thread.messages)
+  .filter((message) => message.senderRole !== (isAdmin.value ? 'admin' : 'user') && !message.isRead).length)
+
+const loadRows = async (path) => {
+  const response = await api(path)
+  if (Array.isArray(response)) return response
+  if (response && Array.isArray(response.results)) return response.results
+  throw new Error(`Unexpected list response from ${path}.`)
 }
-watch(messageThreads, persistMessageThreads, { deep: true })
-const startConversation = () => {
+
+const mapBookingFromApi = (booking) => {
+  const carId = booking.car ?? booking.car_id ?? booking.carId ?? booking.vehicleId
+  const car = cars.value.find((item) => String(item.id) === String(carId))
+  const pickupAt = String(booking.pickup_at || booking.pickupAt || booking.borrowAt || booking.startDate || booking.borrowDate || '')
+  const returnAt = String(booking.return_at || booking.returnAt || booking.endDate || booking.returnDate || '')
+  const statusLabels = { pending: 'Pending', confirmed: 'Confirmed', approved: 'Approved', rejected: 'Rejected', cancelled: 'Cancelled', completed: 'Completed' }
+  const calculatedDays = Math.ceil((Date.parse(returnAt) - Date.parse(pickupAt)) / 86400000)
+  const durationDays = Number.isFinite(calculatedDays) ? Math.max(1, calculatedDays) : Number(booking.totalDays || 1)
+  const status = String(booking.status || '').toLowerCase()
+  const customerName = booking.renter_name || booking.customer_name || booking.customer || ''
+  const customerEmail = booking.customer_email || booking.email || ''
+  return {
+    id: booking.id,
+    bookingRef: `BK-${booking.id}`,
+    customer: customerName,
+    renterName: customerName,
+    customerEmail,
+    customerId: booking.userId ?? booking.user_id ?? booking.customerId,
+    phone: booking.renter_phone || '',
+    email: customerEmail,
+    address: booking.renter_address || '',
+    licenseNumber: booking.license_number || '',
+    licenseExpiry: booking.license_expiry || '',
+    carId,
+    carName: booking.car_details?.name || booking.carName || booking.vehicleName || car?.name || 'Vehicle',
+    brand: booking.car_details?.brand || booking.brand || car?.brand || '',
+    pickupDate: booking.pickupDate || pickupAt.slice(0, 10),
+    pickupTime: booking.pickupTime || pickupAt.slice(11, 16),
+    dropoffDate: booking.returnDate || returnAt.slice(0, 10),
+    dropoffTime: booking.returnTime || returnAt.slice(11, 16),
+    durationDays,
+    totalPrice: Number(booking.total_price ?? booking.totalPrice ?? booking.totalAmount ?? 0),
+    notes: booking.customer_note || booking.notes || '',
+    status: statusLabels[status] || booking.status,
+  }
+}
+
+const buildMessageThreads = (messages) => {
+  const groups = new Map()
+  const currentUserId = Number(sessionUser?.id)
+  const sortedMessages = [...messages].sort((a, b) => new Date(a.created_at || a.createdAt) - new Date(b.created_at || b.createdAt))
+  for (const message of sortedMessages) {
+    const senderId = Number(message.sender ?? message.senderId ?? message.sender_id)
+    const rawRecipientId = message.recipient ?? message.recipientId ?? message.receiverId ?? message.receiver_id
+    const recipientId = rawRecipientId == null ? null : Number(rawRecipientId)
+    const customerId = isAdmin.value ? (senderId === currentUserId ? recipientId : senderId) : currentUserId
+    const subject = message.subject || 'Rental support'
+    const id = `${customerId}:${subject}`
+    if (!groups.has(id)) {
+      groups.set(id, {
+        id,
+        customerId,
+        subject,
+        senderName: isAdmin.value
+          ? (senderId === currentUserId ? (message.recipient_name || message.recipientName) : (message.sender_name || message.senderName))
+          : userName.value,
+        messages: [],
+      })
+    }
+    groups.get(id).messages.push({
+      id: message.id,
+      senderName: message.sender_name || message.senderName,
+      senderRole: senderId === currentUserId ? (isAdmin.value ? 'admin' : 'user') : (isAdmin.value ? 'user' : 'admin'),
+      text: message.body || message.content,
+      time: new Date(message.created_at || message.createdAt).toLocaleString(),
+      isRead: message.is_read ?? message.isRead,
+    })
+  }
+  return [...groups.values()].reverse()
+}
+
+const refreshDashboardData = async () => {
+  try {
+    const [carRows, bookingRows, messageRows] = await Promise.all([
+      loadRows('/cars'),
+      loadRows(isAdmin.value ? '/bookings' : '/bookings/my'),
+      loadRows('/messages'),
+    ])
+    cars.value = carRows.map((car) => ({
+      id: car.id,
+      name: car.name,
+      brand: car.brand,
+      type: car.type || car.vehicle_type || car.category || 'Vehicle',
+      price: Number(car.price ?? car.pricePerDay ?? car.daily_rate),
+      transmission: car.transmission,
+      seats: car.seats,
+      fuel: car.fuel,
+      status: String(car.status).toLowerCase() === 'available' ? 'Available' : 'Unavailable',
+      icon: '',
+      tint: 'blue',
+    }))
+    carIdByName.value = Object.fromEntries(cars.value.map((car) => [car.name, car.id]))
+    bookings.value = bookingRows.map(mapBookingFromApi)
+    renterInformation.value = bookings.value.map((booking) => ({
+      id: booking.id,
+      bookingId: booking.id,
+      renterName: booking.renterName,
+      phone: booking.phone,
+      email: booking.email,
+      address: booking.address,
+      licenseNumber: booking.licenseNumber,
+      licenseExpiry: booking.licenseExpiry,
+      brand: booking.brand,
+      carName: booking.carName,
+      pickupDate: booking.pickupDate,
+      pickupTime: booking.pickupTime,
+      dropoffDate: booking.dropoffDate,
+      dropoffTime: booking.dropoffTime,
+    }))
+    messageThreads.value = buildMessageThreads(messageRows)
+    if (!messageThreads.value.some((thread) => thread.id === selectedThreadId.value)) {
+      selectedThreadId.value = messageThreads.value[0]?.id ?? null
+    }
+    dashboardError.value = ''
+  } catch (error) {
+    dashboardError.value = error instanceof Error ? error.message : 'Unable to load rental data from the backend.'
+    throw error
+  }
+}
+
+const updateBookingStatus = async (booking, status) => {
+  statusUpdatingId.value = booking.id
+  dashboardError.value = ''
+  try {
+    const backendStatus = { confirmed: 'Confirmed', rejected: 'Rejected' }[status] || status
+    await api(`/bookings/${booking.id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: backendStatus }),
+    })
+    if (booking.customerId) {
+      await api('/messages', {
+        method: 'POST',
+        body: JSON.stringify({
+          recipientId: booking.customerId,
+          subject: `Booking request #${booking.id}`,
+          body: `Your booking for ${booking.carName} has been ${status}.`,
+        }),
+      })
+    }
+    void refreshDashboardData().catch(() => {})
+  } catch (error) {
+    dashboardError.value = error instanceof Error ? error.message : 'Unable to update the booking status.'
+  } finally {
+    statusUpdatingId.value = null
+  }
+}
+
+const markThreadAsRead = async (threadId) => {
+  const thread = messageThreads.value.find((item) => item.id === threadId)
+  if (!thread) return
+  const incoming = thread.messages.filter((message) => message.senderRole !== (isAdmin.value ? 'admin' : 'user') && !message.isRead)
+  for (const message of incoming) {
+    await api(`/messages/${message.id}/read`, { method: 'PATCH' })
+    message.isRead = true
+  }
+}
+
+watch([selectedThreadId, activeView], ([threadId, view]) => {
+  if (view === 'messages' && threadId) {
+    void markThreadAsRead(threadId).catch((error) => {
+      dashboardError.value = error instanceof Error ? error.message : 'Unable to mark the message as read.'
+    })
+  }
+})
+
+const startConversation = async () => {
   const text = messageDraft.value.trim()
   const subject = messageSubject.value.trim()
   if (!text || !subject) return
-  const id = `MSG-${Date.now()}`
-  const thread = {
-    id,
-    subject,
-    senderName: isAdmin.value ? 'Rental Support' : userName.value,
-    senderRole: isAdmin.value ? 'admin' : 'user',
-    readBy: [isAdmin.value ? 'admin' : 'user'],
-    messages: [{ id: `${id}-1`, senderName: userName.value, senderRole: isAdmin.value ? 'admin' : 'user', text, time: formatMessageTime() }],
+  dashboardError.value = ''
+  try {
+    await api('/messages', {
+      method: 'POST',
+      body: JSON.stringify({ subject, body: text }),
+    })
+    messageSubject.value = ''
+    messageDraft.value = ''
+    selectedThreadId.value = `${sessionUser?.id}:${subject}`
+    void refreshDashboardData().catch(() => {})
+  } catch (error) {
+    dashboardError.value = error instanceof Error ? error.message : 'Unable to send the message.'
   }
-  messageThreads.value.unshift(thread)
-  selectedThreadId.value = id
-  messageSubject.value = ''
-  messageDraft.value = ''
 }
-const sendMessage = () => {
+
+const sendMessage = async () => {
   const text = messageDraft.value.trim()
   if (!text || !activeThread.value) return
-  activeThread.value.messages.push({
-    id: `${activeThread.value.id}-${Date.now()}`,
-    senderName: userName.value,
-    senderRole: isAdmin.value ? 'admin' : 'user',
-    text,
-    time: formatMessageTime(),
-  })
-  if (!activeThread.value.readBy) activeThread.value.readBy = []
-  if (!activeThread.value.readBy.includes(isAdmin.value ? 'admin' : 'user')) activeThread.value.readBy.push(isAdmin.value ? 'admin' : 'user')
-  messageDraft.value = ''
+  dashboardError.value = ''
+  try {
+    await api('/messages', {
+      method: 'POST',
+      body: JSON.stringify({
+        subject: activeThread.value.subject,
+        body: text,
+        ...(isAdmin.value ? { recipientId: activeThread.value.customerId } : {}),
+      }),
+    })
+    messageDraft.value = ''
+    void refreshDashboardData().catch(() => {})
+  } catch (error) {
+    dashboardError.value = error instanceof Error ? error.message : 'Unable to send the reply.'
+  }
 }
 
 </script>
@@ -1577,6 +1652,21 @@ const sendMessage = () => {
   color: var(--sidebar-text);
   opacity: 1;
   box-shadow: inset 0 0 0 1px rgba(15, 111, 255, 0.08);
+}
+
+.unread-count {
+  min-width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .user-theme .nav-item.active {
@@ -2373,6 +2463,19 @@ const sendMessage = () => {
   border-radius: 14px;
 }
 
+.booking-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.booking-status-actions .small-btn {
+  min-height: 34px;
+  padding: 7px 12px;
+}
+
 .message-item strong,
 .booking-row strong,
 .setting-item strong {
@@ -2401,6 +2504,12 @@ const sendMessage = () => {
 .status-badge.confirmed {
   background: rgba(27, 191, 122, 0.12);
   color: #188a5b;
+}
+
+.status-badge.rejected,
+.status-badge.cancelled {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b42318;
 }
 
 .status-badge.new {

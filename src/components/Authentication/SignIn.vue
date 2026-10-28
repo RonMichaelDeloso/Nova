@@ -70,9 +70,10 @@
 
 
         <!-- Login -->
-        <button class="login-button" @click="login">
-          Log In
+        <button class="login-button" :disabled="isSigningIn" @click="login">
+          {{ isSigningIn ? 'Signing in…' : 'Log In' }}
         </button>
+        <p v-if="loginError" class="login-error" role="alert">{{ loginError }}</p>
 
 
         <!-- Sign Up -->
@@ -89,10 +90,11 @@
 </template>
 
 
-<script setup>
-import { onMounted, ref } from 'vue'
+<script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getSessionUser, loginUser, seedTemporaryAccount } from '../../auth'
+import { setSessionUser } from '../../auth'
+import { api, setToken, type AuthResponse } from '../../api/client'
 import logoImage from '../../assets/logo.png'
 import authWallpaper from '../../assets/authwallpaper.png'
 
@@ -100,28 +102,32 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
+const isSigningIn = ref(false)
+const loginError = ref('')
 
-onMounted(() => {
-  seedTemporaryAccount()
-  email.value = 'demo@nova.com'
-  password.value = 'nova123'
-})
-
-const login = () => {
+const login = async () => {
   if (!email.value || !password.value) {
-    alert('Please enter your email and password.')
+    loginError.value = 'Please enter your email and password.'
     return
   }
 
-  const success = loginUser(email.value, password.value)
-
-  if (!success) {
-    alert('Invalid email or password.')
-    return
+  isSigningIn.value = true
+  loginError.value = ''
+  try {
+    const result = await api<AuthResponse>('/auth/login/', {
+      method: 'POST',
+      body: JSON.stringify({ email: email.value, password: password.value }),
+    })
+    const token = result.token || result.access
+    if (!token) throw new Error('The backend did not return an authentication token.')
+    setToken(token)
+    setSessionUser(result.user)
+    await router.push(result.user.role === 'admin' ? '/dashboard/admin' : '/dashboard/user')
+  } catch (error) {
+    loginError.value = error instanceof Error ? error.message : 'Unable to sign in.'
+  } finally {
+    isSigningIn.value = false
   }
-
-  const route = getSessionUser()?.role === 'admin' ? '/dashboard/admin' : '/dashboard/user'
-  router.push(route)
 }
 </script>
 
@@ -138,6 +144,12 @@ const login = () => {
   display: flex;
   overflow: hidden;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.login-error {
+  margin-top: 12px;
+  color: #b42318;
+  font-size: 0.9rem;
 }
 
 
